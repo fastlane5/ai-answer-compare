@@ -24,11 +24,19 @@ export default function App() {
   const [editingTabId, setEditingTabId] = useState(null);
   const [editingTabTitle, setEditingTabTitle] = useState('');
 
-  // 메시지 모달(alert 대체) 상태
+  // 메시지 모달 상태
   const [msgModal, setMsgModal] = useState({ show: false, title: '', message: '' });
 
   // === 초기화 및 로컬스토리지 로드 ===
   useEffect(() => {
+    // 🔥 Tailwind CSS 자동 로드 (디자인 깨짐 방지)
+    if (!document.getElementById('tailwind-cdn')) {
+      const script = document.createElement('script');
+      script.id = 'tailwind-cdn';
+      script.src = "https://cdn.tailwindcss.com";
+      document.head.appendChild(script);
+    }
+
     const loadData = () => {
       try {
         const savedDate = localStorage.getItem('yt-script-date');
@@ -39,7 +47,7 @@ export default function App() {
         
         let loadedTabs = [];
         if (savedTabs) {
-          // 기존에 저장된 데이터 중 진행자 탭이 있다면 필터링하여 제외합니다.
+          // 기존 진행자 탭 제외 필터링
           loadedTabs = JSON.parse(savedTabs).filter(tab => !tab.isHost);
           setTabs(loadedTabs);
           if (loadedTabs.length > 0) setActiveTabId(loadedTabs[0].id);
@@ -56,7 +64,7 @@ export default function App() {
         if (savedDate) {
           setDateStr(savedDate);
         } else {
-          setShowDateModal(true); // 날짜 입력창 띄우기
+          setShowDateModal(true);
         }
       } catch (e) {
         console.error("데이터 로드 실패", e);
@@ -117,7 +125,7 @@ export default function App() {
     return content.replace(/\n+$/, '').length;
   };
 
-  // === 파일 다운로드 기능 (로컬 저장) ===
+  // === 파일 다운로드 기능 ===
   const downloadActiveTab = () => {
     const activeTab = tabs.find(t => t.id === activeTabId);
     if (!activeTab || !activeTab.content.trim()) {
@@ -135,8 +143,6 @@ export default function App() {
       return;
     }
 
-    // 웹 환경에서는 폴더 지정 대신 전체 내용을 하나의 파일로 합치거나 각각 다운로드를 유도해야 합니다.
-    // 여기서는 모든 내용을 하나의 깔끔한 텍스트 파일로 병합하여 다운로드합니다.
     const mergedContent = tabsWithContent.map(t => 
       `========== [ ${t.title} ] ==========\n${t.content}\n`
     ).join('\n\n');
@@ -246,7 +252,7 @@ export default function App() {
       {/* 탭 네비게이션 */}
       <div className="flex overflow-x-auto bg-gray-100 border-b custom-scrollbar items-end pt-2 px-2">
         {tabs.map((tab) => (
-          <div key={tab.id} className="relative group">
+          <div key={tab.id} className="relative group flex-shrink-0">
             {editingTabId === tab.id ? (
               <div className="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-3 py-2 z-10 relative">
                 <input 
@@ -284,19 +290,17 @@ export default function App() {
       {/* 에디터 영역 */}
       <div className="flex-1 bg-white relative flex flex-col p-4 shadow-inner overflow-hidden">
         {activeTab && (
-          <>
-            <textarea
-              className="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2"
-              value={activeTab.content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              placeholder={`${activeTab.title} 답변을 입력하세요...\n(내용은 브라우저에 자동 저장됩니다)`}
-              style={{
-                fontFamily: settings.fontFamily,
-                fontSize: `${settings.fontSize}px`,
-                lineHeight: settings.lineSpacing,
-              }}
-            />
-          </>
+          <textarea
+            className="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2"
+            value={activeTab.content}
+            onChange={(e) => handleContentChange(e.target.value)}
+            placeholder={`${activeTab.title} 답변을 입력하세요...\n(내용은 브라우저에 자동 저장됩니다)`}
+            style={{
+              fontFamily: settings.fontFamily,
+              fontSize: `${settings.fontSize}px`,
+              lineHeight: settings.lineSpacing,
+            }}
+          />
         )}
       </div>
 
@@ -312,8 +316,6 @@ export default function App() {
       </div>
 
       {/* === 모달(팝업) 영역 === */}
-      
-      {/* 1. 날짜 설정 모달 */}
       {showDateModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full animate-in fade-in zoom-in-95 duration-200">
@@ -340,7 +342,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. 일반 메시지 모달 (Alert 대체) */}
       {msgModal.show && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full text-center">
@@ -359,7 +360,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 스타일 유틸리티 (스크롤바 등) */}
+      {/* 스타일 유틸리티 */}
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
