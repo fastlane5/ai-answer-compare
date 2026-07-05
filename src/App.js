@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Save, FileText, AlertCircle, Check, X, Plus, Trash2, Eye, Edit2, ArrowLeft, ArrowRight, Files, Code, Printer, FileDown, Loader2 } from 'lucide-react';
+import { Download, Save, FileText, AlertCircle, Check, X, Plus, Trash2, Eye, Edit2, ArrowLeft, ArrowRight, Files, Code, FileDown, Loader2 } from 'lucide-react';
 
 const TAB_NAMES = ["제미나이pro", "제미나이3.5", "챗GPT", "클로드", "퍼플렉서티", "라마4", "그록4", "META"];
 const DEFAULT_FONTS = ["sans-serif", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", "serif", "monospace"];
