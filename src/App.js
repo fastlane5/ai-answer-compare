@@ -332,10 +332,10 @@ export default function App() {
     // 전체를 감싸는 배경 영역 (모바일 보기 모드일 때 가운데 정렬 및 스마트폰 목업 테두리 표시)
     <div className={`bg-gray-800 min-h-screen flex items-center justify-center print:bg-white print:block transition-colors duration-300`}>
       
-      {/* 메인 앱 컨테이너 (토글 상태에 따라 폭과 테두리가 변경됨) */}
+      {/* 메인 앱 컨테이너 (토글 상태에 따라 폭과 테두리가 가로 모바일 뷰로 변경됨) */}
       <div className={`flex flex-col bg-gray-50 font-sans transition-all duration-500 ease-in-out print:max-w-none print:h-auto print:border-none print:shadow-none print:block overflow-hidden relative
         ${isMobileView 
-          ? 'w-full max-w-[430px] h-[932px] max-h-screen shadow-2xl sm:rounded-[3rem] sm:border-[12px] sm:border-black' 
+          ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' 
           : 'w-full h-screen'}
       `}>
         
@@ -345,14 +345,14 @@ export default function App() {
           <div className="flex items-center justify-between w-full sm:w-auto">
             <h1 className="text-lg sm:text-xl font-bold text-gray-800 whitespace-nowrap">AI 답변 비교</h1>
             
-            {/* 📱 모바일/PC 토글 스위치 (데스크톱 환경에서만 보임) */}
+            {/* 📱 모바일/PC 토글 스위치 (가로 모드 지원 아이콘 표기) */}
             <button 
               onClick={() => setIsMobileView(!isMobileView)} 
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition ml-4 border border-gray-300"
               title="화면 크기 전환"
             >
-              {isMobileView ? <Monitor size={16} /> : <Smartphone size={16} />}
-              <span className="text-sm">{isMobileView ? 'PC 보기' : '모바일 보기'}</span>
+              {isMobileView ? <Monitor size={16} /> : <Smartphone size={16} className="rotate-90" />}
+              <span className="text-sm">{isMobileView ? 'PC 보기' : '모바일 가로보기'}</span>
             </button>
           </div>
 
@@ -430,7 +430,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* 3. 현재 탭 액션(도구) 바 (스와이프 가능하도록 overflow-x-auto 추가) */}
+        {/* 3. 현재 탭 액션(도구) 바 (가로 스크롤 가능) */}
         {activeTab && (
           <div className="bg-white border-b px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm z-10 overflow-x-auto gap-3 custom-scrollbar">
             
@@ -517,13 +517,13 @@ export default function App() {
             <span>접두사: <strong className="text-white bg-gray-700 px-1 sm:px-2 py-0.5 rounded ml-1">{filePrefix || '(없음)'}</strong></span>
             <button 
               onClick={() => setShowPrefixModal(true)} 
-              className="ml-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gray-600 hover:bg-gray-500 rounded flex items-center gap-1 transition text-white border border-gray-500"
+              className="ml-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs flex items-center gap-1 transition text-white border border-gray-500"
             >
               <Edit2 size={10} /> 설정
             </button>
             {activeTab && (
               <span className="ml-2 sm:ml-4 text-gray-400 hidden md:inline truncate">
-                👉 <strong className="text-green-400 font-mono ml-1">{filePrefix ? `${filePrefix}-` : ''}{activeTab.title}.txt</strong>
+                👉 예상 파일명: <strong className="text-green-400 font-mono ml-1">{filePrefix ? `${filePrefix}-` : ''}{activeTab.title}.txt</strong>
               </span>
             )}
           </div>
