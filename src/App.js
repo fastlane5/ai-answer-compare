@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Save, FileText, AlertCircle, Check, X, Plus, Trash2, Eye, Edit2, ArrowLeft, ArrowRight, Files, Code, Printer } from 'lucide-react';
+import { Download, Save, FileText, AlertCircle, Check, X, Plus, Trash2, Eye, Edit2, ArrowLeft, ArrowRight, Files, Code, Printer, FileDown, Loader2 } from 'lucide-react';
 
-const TAB_NAMES = ["제미나이pro", "제미나이3.5", "챗GPT", "클로드", "퍼플렉서티", "라마4", "그록4"];
+const TAB_NAMES = ["제미나이pro", "제미나이3.5", "챗GPT", "클로드", "퍼플렉서티", "라마4", "그록4", "META"];
 const DEFAULT_FONTS = ["sans-serif", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", "serif", "monospace"];
 const LINE_SPACINGS = ["1.00", "1.15", "1.25", "1.50", "1.75", "2.00", "2.50", "3.00"];
 
@@ -27,8 +27,9 @@ export default function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [msgModal, setMsgModal] = useState({ show: false, title: '', message: '' });
   
-  // 인쇄 모드 상태 (전체 통합 인쇄인지, 개별 탭 인쇄인지 구분)
-  const [printConfig, setPrintConfig] = useState({ mode: 'all', activeId: null });
+  // PDF 생성 중 로딩 상태 표시
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfProgressText, setPdfProgressText] = useState('');
 
   // 키보드 단축키용 상태 참조 (렌더링 최적화)
   const tabsRef = useRef(tabs);
@@ -50,6 +51,13 @@ export default function App() {
       const script = document.createElement('script');
       script.id = 'marked-cdn';
       script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+      document.head.appendChild(script);
+    }
+    // 🔥 PDF 생성 라이브러리(html2pdf.js) 로드
+    if (!document.getElementById('html2pdf-cdn')) {
+      const script = document.createElement('script');
+      script.id = 'html2pdf-cdn';
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
       document.head.appendChild(script);
     }
 
@@ -212,71 +220,118 @@ export default function App() {
     }
   };
 
-  // === PDF 인쇄 기능 (마크다운 모드 강제 적용) ===
-  const handlePrintCurrentPdf = () => {
+  // === 🚀 html2pdf.js 기반 백그라운드 PDF 생성 엔진 ===
+  const generateDirectPdf = async (title, content, filename) => {
+    if (!window.html2pdf) {
+      setMsgModal({ show: true, title: '오류', message: 'PDF 라이브러리가 로드되지 않았습니다. 잠시만 기다려 주세요.' });
+      return;
+    }
+
+    // 오프스크린 임시 렌더링 컨테이너 생성
+    const container = document.createElement('div');
+    container.className = 'bg-white text-black p-8';
+    container.style.width = '794px'; // A4 width at 96 DPI
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '-9999px';
+
+    const htmlContent = window.marked ? window.marked.parse(content || '*내용 없음*') : content;
+
+    container.innerHTML = `
+      <div class="markdown-body" style="font-family: ${settings.fontFamily}; font-size: ${settings.fontSize}px; line-height: ${settings.lineSpacing};">
+        <div style="text-align: center; margin-bottom: 2rem; border-bottom: 4px solid #1f2937; padding-bottom: 1rem;">
+          <h1 style="font-size: 2.25rem; font-weight: bold; margin: 0; color: #111827;">${title}</h1>
+          ${filePrefix ? `<p style="color: #6b7280; margin-top: 0.5rem; font-size: 1.125rem;">프로젝트 접두사: ${filePrefix}</p>` : ''}
+        </div>
+        <div style="color: #1f2937;">${htmlContent}</div>
+      </div>
+    `;
+
+    document.body.appendChild(container);
+
+    const opt = {
+      margin: 15,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    try {
+      await window.html2pdf().from(container).set(opt).save();
+    } catch (err) {
+      console.error('PDF 생성 실패:', err);
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
+  // 1. 현재 단일 탭 PDF 다운로드
+  const handlePrintCurrentPdf = async () => {
     const activeTab = tabs.find(t => t.id === activeTabId);
-    if (!activeTab || !activeTab.content.trim()) return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
+    if (!activeTab || !activeTab.content.trim()) return setMsgModal({ show: true, title: '저장 불가', message: '현재 탭에 내용이 없습니다.' });
     
-    setIsPreviewMode(true); // 마크다운 뷰어 모드로 자동 전환
-    setPrintConfig({ mode: 'single', activeId: activeTabId });
-    
-    setTimeout(() => {
-      const originalTitle = document.title;
-      document.title = `${filePrefix ? filePrefix + '-' : ''}${activeTab.title}`; // PDF 기본 저장 이름 설정
-      window.print();
-      document.title = originalTitle;
-      setPrintConfig({ mode: 'all', activeId: null });
-    }, 300); // 렌더링 대기
-  };
+    setIsGeneratingPdf(true);
+    setPdfProgressText(`"${activeTab.title}" PDF 생성 및 저장 중...`);
 
-  const handlePrintAllPdf = () => {
-    const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
-    if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
-    
+    // 시각적 만족을 위해 마크다운 모드로 잠시 변경
     setIsPreviewMode(true);
-    setPrintConfig({ mode: 'all', activeId: null });
-    
-    setTimeout(() => {
-      const originalTitle = document.title;
-      document.title = `${filePrefix ? filePrefix + '-' : ''}AI답변_통합본`;
-      window.print();
-      document.title = originalTitle;
-    }, 300);
+
+    setTimeout(async () => {
+      const filename = `${filePrefix ? filePrefix + '-' : ''}${activeTab.title}.pdf`;
+      await generateDirectPdf(activeTab.title, activeTab.content, filename);
+      setIsGeneratingPdf(false);
+    }, 400);
   };
 
+  // 2. 모든 탭을 하나로 묶은 통합 PDF 다운로드
+  const handlePrintAllPdf = async () => {
+    const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
+    if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '저장 불가', message: '저장할 내용이 없습니다.' });
+
+    setIsGeneratingPdf(true);
+    setPdfProgressText("전체 통합 PDF 병합 및 빌드 중...");
+    setIsPreviewMode(true);
+
+    setTimeout(async () => {
+      // 모든 내용 병합
+      const mergedContent = tabsWithContent.map(t => `\n\n# ${t.title}\n---\n${t.content}`).join('\n\n');
+      const filename = `${filePrefix ? filePrefix + '-' : ''}AI답변_통합본.pdf`;
+      await generateDirectPdf("AI 답변 비교 통합 문서", mergedContent, filename);
+      setIsGeneratingPdf(false);
+    }, 400);
+  };
+
+  // 3. 모든 탭 개별 파일로 자동 일괄 다운로드 (완전 자동!)
   const handlePrintAllIndividuallyPdf = async () => {
     const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
-    if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
+    if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '저장 불가', message: '저장할 내용이 없습니다.' });
 
+    setIsGeneratingPdf(true);
     setIsPreviewMode(true);
-    const originalTitle = document.title;
 
     for (let i = 0; i < tabsWithContent.length; i++) {
       const tab = tabsWithContent[i];
-      setPrintConfig({ mode: 'single', activeId: tab.id });
+      setPdfProgressText(`개별 PDF 일괄 저장 중... (${i + 1}/${tabsWithContent.length})\n- ${tab.title}`);
       
-      await new Promise(r => setTimeout(r, 400)); // UI 업데이트 대기
-      document.title = `${filePrefix ? filePrefix + '-' : ''}${tab.title}`;
-      window.print(); // 인쇄 다이얼로그 팝업 (사용자가 닫을때까지 코드 정지)
+      const filename = `${filePrefix ? filePrefix + '-' : ''}${tab.title}.pdf`;
+      await generateDirectPdf(tab.title, tab.content, filename);
+      // 브라우저 동시 다운로드 과부하 방지용 짧은 딜레이
+      await new Promise(r => setTimeout(r, 200));
     }
 
-    document.title = originalTitle;
-    setPrintConfig({ mode: 'all', activeId: null });
+    setIsGeneratingPdf(false);
   };
 
   if (!isInitialized) return null;
 
   const activeTab = tabs.find(t => t.id === activeTabId);
-  
-  // 인쇄할 탭 필터링 (현재 탭 모드 vs 전체 모드)
-  const tabsToPrint = printConfig.mode === 'single'
-    ? tabs.filter(t => t.id === printConfig.activeId && t.content.trim().length > 0)
-    : tabs.filter(t => t.content.trim().length > 0);
 
   return (
     <>
-      {/* 화면용 UI (인쇄 시 숨김 처리 - print:hidden) */}
-      <div className="flex flex-col h-screen bg-gray-50 font-sans print:hidden">
+      {/* 화면용 UI */}
+      <div className="flex flex-col h-screen bg-gray-50 font-sans">
         {/* 1. 상단 글로벌 컨트롤 패널 */}
         <div className="bg-white border-b shadow-sm p-3 flex flex-wrap items-center gap-4 text-sm z-10">
           <h1 className="text-xl font-bold text-gray-800 whitespace-nowrap mr-2">AI 답변 비교</h1>
@@ -371,16 +426,16 @@ export default function App() {
                 {isPreviewMode ? <><Code size={16}/> 에디터로 돌아가기</> : <><Eye size={16}/> 마크다운 미리보기</>}
               </button>
 
-              {/* PDF 그룹 */}
+              {/* PDF 일괄 자동 다운로드 그룹 */}
               <div className="flex items-center gap-1 border-l pl-3">
-                <button onClick={handlePrintCurrentPdf} className="flex items-center gap-1 px-2 py-1.5 bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100 transition" title="현재 탭만 PDF로 저장">
-                  <Printer size={14} /> 현재 탭 PDF
+                <button onClick={handlePrintCurrentPdf} className="flex items-center gap-1 px-2.5 py-1.5 bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100 transition" title="현재 탭을 PDF 파일로 즉시 다운로드">
+                  <FileDown size={14} /> 현재 탭 PDF
                 </button>
-                <button onClick={handlePrintAllPdf} className="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 rounded border border-green-300 hover:bg-green-200 transition font-semibold" title="모든 탭을 하나의 PDF로 묶어서 저장">
-                  <Printer size={14} /> 전체 통합 PDF
+                <button onClick={handlePrintAllPdf} className="flex items-center gap-1 px-2.5 py-1.5 bg-green-100 text-green-800 rounded border border-green-300 hover:bg-green-200 transition font-semibold" title="모든 탭을 하나의 PDF 문서로 묶어서 즉시 다운로드">
+                  <FileDown size={14} /> 전체 통합 PDF
                 </button>
-                <button onClick={handlePrintAllIndividuallyPdf} className="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded shadow hover:bg-green-700 transition font-semibold" title="모든 탭을 각각의 PDF 파일로 하나씩 저장">
-                  <Printer size={14} /> 전체 개별 PDF
+                <button onClick={handlePrintAllIndividuallyPdf} className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 text-white rounded shadow hover:bg-green-700 transition font-semibold" title="모든 탭을 각각의 PDF 파일로 자동 즉시 다운로드">
+                  <FileDown size={14} /> 전체 개별 PDF
                 </button>
               </div>
 
@@ -448,36 +503,21 @@ export default function App() {
         </div>
       </div>
 
-      {/* ======================================================= */}
-      {/* 6. 인쇄용 전용 UI (평소에는 숨겨져 있고, 인쇄 시에만 나옴) */}
-      {/* ======================================================= */}
-      <div className="hidden print:block w-full max-w-none bg-white text-black p-8">
-        <div className="text-center mb-8 border-b-4 border-gray-800 pb-4">
-          <h1 className="text-3xl font-bold">
-            {printConfig.mode === 'single' && tabsToPrint[0] ? tabsToPrint[0].title : "AI 답변 비교 문서"}
-          </h1>
-          {filePrefix && <p className="text-gray-500 mt-2 text-lg">프로젝트 접두사: {filePrefix}</p>}
-        </div>
-
-        {tabsToPrint.map((tab, index) => (
-          <div key={`print-tab-${tab.id}`} className="mb-12 break-inside-avoid">
-            {printConfig.mode === 'all' && (
-              <h2 className="text-2xl font-bold bg-gray-100 px-4 py-2 mb-6 rounded border-l-4 border-indigo-600">
-                {tab.title}
-              </h2>
-            )}
-            <div
-              className="markdown-body"
-              style={{ fontFamily: settings.fontFamily, fontSize: `${settings.fontSize}px`, lineHeight: settings.lineSpacing }}
-              dangerouslySetInnerHTML={{ __html: window.marked ? window.marked.parse(tab.content) : tab.content }}
-            />
+      {/* === PDF 생성 중 로딩 오버레이 모달 === */}
+      {isGeneratingPdf && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm text-center">
+            <Loader2 className="animate-spin text-green-600 mb-4" size={48} />
+            <h3 className="text-lg font-bold text-gray-800 mb-1">PDF 파일 작성 중</h3>
+            <p className="text-sm text-gray-600 whitespace-pre-line">{pdfProgressText}</p>
+            <p className="text-xs text-gray-400 mt-4">완료되면 자동으로 다운로드 폴더에 저장됩니다.</p>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* === 모달(팝업) 영역 === */}
       {showPrefixModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 print:hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full">
             <h2 className="text-lg font-bold mb-4 text-gray-800">파일명 접두사 설정</h2>
             <form onSubmit={(e) => { e.preventDefault(); setFilePrefix(new FormData(e.target).get('prefixInput')); setShowPrefixModal(false); }}>
@@ -493,7 +533,7 @@ export default function App() {
       )}
 
       {msgModal.show && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 print:hidden">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-500 mb-4"><AlertCircle size={28} /></div>
             <h2 className="text-lg font-bold mb-2 text-gray-800">{msgModal.title}</h2>
@@ -521,14 +561,6 @@ export default function App() {
         .markdown-body code { background: #f3f4f6; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; color: #ef4444; font-size: 0.9em; }
         .markdown-body pre { background: #1f2937; color: #f9fafb; padding: 1em; border-radius: 8px; overflow-x: auto; margin-bottom: 1em; }
         .markdown-body pre code { background: transparent; color: inherit; padding: 0; font-size: 0.9em; }
-        
-        /* 인쇄 최적화 CSS */
-        @media print {
-          @page { margin: 15mm; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
-          .markdown-body pre { border: 1px solid #d1d5db; background: #f3f4f6 !important; color: black !important; white-space: pre-wrap !important; word-break: break-word !important; }
-          .markdown-body blockquote { border-left: 4px solid #9ca3af !important; background: #f9fafb !important; }
-        }
       `}} />
     </>
   );
