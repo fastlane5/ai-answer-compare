@@ -26,6 +26,9 @@ export default function App() {
   
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [msgModal, setMsgModal] = useState({ show: false, title: '', message: '' });
+  
+  // 인쇄 모드 상태 (전체 통합 인쇄인지, 개별 탭 인쇄인지 구분)
+  const [printConfig, setPrintConfig] = useState({ mode: 'all', activeId: null });
 
   // 키보드 단축키용 상태 참조 (렌더링 최적화)
   const tabsRef = useRef(tabs);
@@ -95,7 +98,6 @@ export default function App() {
   // === 단축키 이벤트 리스너 ===
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // 단축키: Ctrl + Alt + Left/Right
       if (e.ctrlKey && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
         const currentTabs = tabsRef.current;
@@ -139,11 +141,11 @@ export default function App() {
     if (activeTabId === id) setActiveTabId(newTabs[0].id);
   };
 
-  const moveTab = (direction) => { // -1 (왼쪽), 1 (오른쪽)
+  const moveTab = (direction) => {
     const idx = tabs.findIndex(t => t.id === activeTabId);
     if (idx === -1) return;
     const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= tabs.length) return; // 양 끝이면 이동 불가
+    if (newIdx < 0 || newIdx >= tabs.length) return;
 
     const newTabs = [...tabs];
     const temp = newTabs[idx];
@@ -175,7 +177,7 @@ export default function App() {
 
   const getCharCount = (content) => content.replace(/\n+$/, '').length;
 
-  // === 파일 다운로드 기능 ===
+  // === TXT 파일 다운로드 기능 ===
   const triggerDownload = (filename, content) => {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -190,18 +192,13 @@ export default function App() {
 
   const downloadActiveTab = () => {
     const activeTab = tabs.find(t => t.id === activeTabId);
-    if (!activeTab || !activeTab.content.trim()) {
-      setMsgModal({ show: true, title: '저장 실패', message: '현재 탭에 내용이 없습니다.' });
-      return;
-    }
-    const filename = `${filePrefix ? filePrefix + '-' : ''}${activeTab.title}.txt`;
-    triggerDownload(filename, activeTab.content);
+    if (!activeTab || !activeTab.content.trim()) return setMsgModal({ show: true, title: '저장 실패', message: '현재 탭에 내용이 없습니다.' });
+    triggerDownload(`${filePrefix ? filePrefix + '-' : ''}${activeTab.title}.txt`, activeTab.content);
   };
 
   const downloadAllTabsMerged = () => {
     const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
     if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '저장 실패', message: '저장할 내용이 없습니다.' });
-    
     const mergedContent = tabsWithContent.map(t => `========== [ ${t.title} ] ==========\n${t.content}\n`).join('\n\n');
     triggerDownload(`${filePrefix ? filePrefix + '-' : ''}AI답변_통합본.txt`, mergedContent);
   };
@@ -209,29 +206,72 @@ export default function App() {
   const downloadAllTabsIndividually = async () => {
     const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
     if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '저장 실패', message: '저장할 내용이 없습니다.' });
-    
-    // 브라우저가 다중 다운로드를 차단하지 않도록 약간의 시간차(300ms)를 두고 다운로드 실행
     for (let i = 0; i < tabsWithContent.length; i++) {
-      const t = tabsWithContent[i];
-      triggerDownload(`${filePrefix ? filePrefix + '-' : ''}${t.title}.txt`, t.content);
+      triggerDownload(`${filePrefix ? filePrefix + '-' : ''}${tabsWithContent[i].title}.txt`, tabsWithContent[i].content);
       await new Promise(r => setTimeout(r, 300)); 
     }
   };
 
-  // === PDF 인쇄 기능 ===
-  const handlePrintPdf = () => {
-    const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
-    if (tabsWithContent.length === 0) {
-      return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
-    }
+  // === PDF 인쇄 기능 (마크다운 모드 강제 적용) ===
+  const handlePrintCurrentPdf = () => {
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    if (!activeTab || !activeTab.content.trim()) return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
     
-    // 브라우저 네이티브 인쇄 대화상자 호출
-    window.print();
+    setIsPreviewMode(true); // 마크다운 뷰어 모드로 자동 전환
+    setPrintConfig({ mode: 'single', activeId: activeTabId });
+    
+    setTimeout(() => {
+      const originalTitle = document.title;
+      document.title = `${filePrefix ? filePrefix + '-' : ''}${activeTab.title}`; // PDF 기본 저장 이름 설정
+      window.print();
+      document.title = originalTitle;
+      setPrintConfig({ mode: 'all', activeId: null });
+    }, 300); // 렌더링 대기
+  };
+
+  const handlePrintAllPdf = () => {
+    const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
+    if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
+    
+    setIsPreviewMode(true);
+    setPrintConfig({ mode: 'all', activeId: null });
+    
+    setTimeout(() => {
+      const originalTitle = document.title;
+      document.title = `${filePrefix ? filePrefix + '-' : ''}AI답변_통합본`;
+      window.print();
+      document.title = originalTitle;
+    }, 300);
+  };
+
+  const handlePrintAllIndividuallyPdf = async () => {
+    const tabsWithContent = tabs.filter(t => t.content.trim().length > 0);
+    if (tabsWithContent.length === 0) return setMsgModal({ show: true, title: '인쇄 불가', message: '인쇄할 내용이 없습니다.' });
+
+    setIsPreviewMode(true);
+    const originalTitle = document.title;
+
+    for (let i = 0; i < tabsWithContent.length; i++) {
+      const tab = tabsWithContent[i];
+      setPrintConfig({ mode: 'single', activeId: tab.id });
+      
+      await new Promise(r => setTimeout(r, 400)); // UI 업데이트 대기
+      document.title = `${filePrefix ? filePrefix + '-' : ''}${tab.title}`;
+      window.print(); // 인쇄 다이얼로그 팝업 (사용자가 닫을때까지 코드 정지)
+    }
+
+    document.title = originalTitle;
+    setPrintConfig({ mode: 'all', activeId: null });
   };
 
   if (!isInitialized) return null;
 
   const activeTab = tabs.find(t => t.id === activeTabId);
+  
+  // 인쇄할 탭 필터링 (현재 탭 모드 vs 전체 모드)
+  const tabsToPrint = printConfig.mode === 'single'
+    ? tabs.filter(t => t.id === printConfig.activeId && t.content.trim().length > 0)
+    : tabs.filter(t => t.content.trim().length > 0);
 
   return (
     <>
@@ -313,43 +353,49 @@ export default function App() {
 
         {/* 3. 현재 탭 액션(도구) 바 */}
         {activeTab && (
-          <div className="bg-white border-b px-4 py-2 flex flex-wrap items-center justify-between text-sm shadow-sm z-10 overflow-x-auto">
+          <div className="bg-white border-b px-4 py-2 flex flex-wrap items-center justify-between text-sm shadow-sm z-10 overflow-x-auto gap-2">
+            
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button onClick={() => moveTab(-1)} title="탭을 왼쪽으로 이동" className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200"><ArrowLeft size={16}/></button>
-              <button onClick={() => moveTab(1)} title="탭을 오른쪽으로 이동" className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200"><ArrowRight size={16}/></button>
+              <button onClick={() => moveTab(-1)} title="탭 이동" className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200"><ArrowLeft size={16}/></button>
+              <button onClick={() => moveTab(1)} title="탭 이동" className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200"><ArrowRight size={16}/></button>
               <div className="w-px h-5 bg-gray-300 mx-2"></div>
-              <button onClick={() => { setEditingTabId(activeTab.id); setEditingTabTitle(activeTab.title); }} className="flex items-center gap-1 px-2 py-1.5 text-gray-600 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200">
-                <Edit2 size={14}/> 이름 변경
-              </button>
-              <button onClick={() => deleteTab(activeTab.id)} className="flex items-center gap-1 px-2 py-1.5 text-red-500 hover:bg-red-50 rounded border border-transparent hover:border-red-200">
-                <Trash2 size={14}/> 탭 삭제
-              </button>
+              <button onClick={() => { setEditingTabId(activeTab.id); setEditingTabTitle(activeTab.title); }} className="flex items-center gap-1 px-2 py-1.5 text-gray-600 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200"><Edit2 size={14}/> 이름 변경</button>
+              <button onClick={() => deleteTab(activeTab.id)} className="flex items-center gap-1 px-2 py-1.5 text-red-500 hover:bg-red-50 rounded border border-transparent hover:border-red-200"><Trash2 size={14}/> 탭 삭제</button>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center flex-wrap gap-2 flex-shrink-0">
               <button 
                 onClick={() => setIsPreviewMode(!isPreviewMode)} 
-                className={`flex items-center gap-1 px-3 py-1.5 rounded transition font-medium ${isPreviewMode ? 'bg-indigo-600 text-white shadow-inner' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded transition font-medium mr-2 ${isPreviewMode ? 'bg-indigo-600 text-white shadow-inner' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'}`}
               >
                 {isPreviewMode ? <><Code size={16}/> 에디터로 돌아가기</> : <><Eye size={16}/> 마크다운 미리보기</>}
               </button>
-              
-              <div className="w-px h-5 bg-gray-300 mx-1"></div>
-              
-              {/* === 추가된 PDF 버튼 === */}
-              <button onClick={handlePrintPdf} className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100 transition font-semibold">
-                <Printer size={16} /> 전체 PDF 인쇄
-              </button>
 
-              <button onClick={downloadActiveTab} className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded border border-blue-200 hover:bg-blue-100 transition">
-                <Download size={16} /> 탭(1개) 저장
-              </button>
-              <button onClick={downloadAllTabsMerged} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded border border-gray-300 hover:bg-gray-200 transition">
-                <FileText size={16} /> 묶어 저장
-              </button>
-              <button onClick={downloadAllTabsIndividually} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition">
-                <Files size={16} /> 전체 개별 저장
-              </button>
+              {/* PDF 그룹 */}
+              <div className="flex items-center gap-1 border-l pl-3">
+                <button onClick={handlePrintCurrentPdf} className="flex items-center gap-1 px-2 py-1.5 bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100 transition" title="현재 탭만 PDF로 저장">
+                  <Printer size={14} /> 현재 탭 PDF
+                </button>
+                <button onClick={handlePrintAllPdf} className="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 rounded border border-green-300 hover:bg-green-200 transition font-semibold" title="모든 탭을 하나의 PDF로 묶어서 저장">
+                  <Printer size={14} /> 전체 통합 PDF
+                </button>
+                <button onClick={handlePrintAllIndividuallyPdf} className="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded shadow hover:bg-green-700 transition font-semibold" title="모든 탭을 각각의 PDF 파일로 하나씩 저장">
+                  <Printer size={14} /> 전체 개별 PDF
+                </button>
+              </div>
+
+              {/* TXT 그룹 */}
+              <div className="flex items-center gap-1 border-l pl-3">
+                <button onClick={downloadActiveTab} className="flex items-center gap-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded border border-blue-200 hover:bg-blue-100 transition">
+                  <Download size={14} /> 현재 탭 TXT
+                </button>
+                <button onClick={downloadAllTabsMerged} className="flex items-center gap-1 px-2 py-1.5 bg-blue-100 text-blue-800 rounded border border-blue-300 hover:bg-blue-200 transition font-semibold">
+                  <FileText size={14} /> 전체 통합 TXT
+                </button>
+                <button onClick={downloadAllTabsIndividually} className="flex items-center gap-1 px-2 py-1.5 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition font-semibold">
+                  <Files size={14} /> 전체 개별 TXT
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -407,15 +453,19 @@ export default function App() {
       {/* ======================================================= */}
       <div className="hidden print:block w-full max-w-none bg-white text-black p-8">
         <div className="text-center mb-8 border-b-4 border-gray-800 pb-4">
-          <h1 className="text-3xl font-bold">AI 답변 비교 문서</h1>
+          <h1 className="text-3xl font-bold">
+            {printConfig.mode === 'single' && tabsToPrint[0] ? tabsToPrint[0].title : "AI 답변 비교 문서"}
+          </h1>
           {filePrefix && <p className="text-gray-500 mt-2 text-lg">프로젝트 접두사: {filePrefix}</p>}
         </div>
 
-        {tabs.filter(t => t.content.trim().length > 0).map((tab, index) => (
+        {tabsToPrint.map((tab, index) => (
           <div key={`print-tab-${tab.id}`} className="mb-12 break-inside-avoid">
-            <h2 className="text-2xl font-bold bg-gray-100 px-4 py-2 mb-6 rounded border-l-4 border-indigo-600">
-              {tab.title}
-            </h2>
+            {printConfig.mode === 'all' && (
+              <h2 className="text-2xl font-bold bg-gray-100 px-4 py-2 mb-6 rounded border-l-4 border-indigo-600">
+                {tab.title}
+              </h2>
+            )}
             <div
               className="markdown-body"
               style={{ fontFamily: settings.fontFamily, fontSize: `${settings.fontSize}px`, lineHeight: settings.lineSpacing }}
@@ -476,7 +526,7 @@ export default function App() {
         @media print {
           @page { margin: 15mm; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
-          .markdown-body pre { border: 1px solid #d1d5db; background: #f3f4f6 !important; color: black !important; }
+          .markdown-body pre { border: 1px solid #d1d5db; background: #f3f4f6 !important; color: black !important; white-space: pre-wrap !important; word-break: break-word !important; }
           .markdown-body blockquote { border-left: 4px solid #9ca3af !important; background: #f9fafb !important; }
         }
       `}} />
