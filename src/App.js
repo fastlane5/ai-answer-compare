@@ -39,21 +39,18 @@ export default function App() {
 
   // === 초기화 및 로컬스토리지 로드 ===
   useEffect(() => {
-    // 🔥 Tailwind CSS 로드
     if (!document.getElementById('tailwind-cdn')) {
       const script = document.createElement('script');
       script.id = 'tailwind-cdn';
       script.src = "https://cdn.tailwindcss.com";
       document.head.appendChild(script);
     }
-    // 🔥 마크다운 파서(marked) 로드
     if (!document.getElementById('marked-cdn')) {
       const script = document.createElement('script');
       script.id = 'marked-cdn';
       script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
       document.head.appendChild(script);
     }
-    // 🔥 PDF 생성 라이브러리(html2pdf.js) 로드
     if (!document.getElementById('html2pdf-cdn')) {
       const script = document.createElement('script');
       script.id = 'html2pdf-cdn';
@@ -220,55 +217,44 @@ export default function App() {
     }
   };
 
-  // === 🚀 html2pdf.js 기반 백그라운드 PDF 생성 엔진 (화면 잘림 및 빈 문서 방지 버전) ===
+  // === 🚀 html2pdf.js 기반 백그라운드 PDF 생성 엔진 (빈 문서 완벽 해결 버전) ===
   const generateDirectPdf = async (title, content, filename) => {
     if (!window.html2pdf) {
       setMsgModal({ show: true, title: '오류', message: 'PDF 라이브러리가 아직 준비되지 않았습니다. 잠시만 기다려 주세요.' });
       return;
     }
 
-    // 오프스크린이 아닌 '브라우저 활성 렌더링 영역(Viewport)'에 임시 컨테이너 생성
-    // 투명도 0.01로 투명화하고 레이어 순위를 뒤로 밀어 사용자에겐 보이지 않게 처리하여 온전한 브라우저 레이아웃 계산을 강제합니다.
-    const container = document.createElement('div');
-    container.className = 'bg-white text-black p-8';
-    container.style.width = '800px'; 
-    container.style.position = 'fixed';
-    container.style.left = '0';
-    container.style.top = '0';
-    container.style.zIndex = '-9999';
-    container.style.opacity = '0.01';
-    container.style.pointerEvents = 'none';
-
     const htmlContent = window.marked ? window.marked.parse(content || '*내용 없음*') : content;
 
-    // PDF 전용 독립 마크다운 스타일 직접 내장 (외부 Tailwind 스타일 끊김 방지)
+    // 화면(DOM)에 보이지 않는 요소를 붙이는 대신, HTML 문자열 자체를 생성하여 라이브러리에 직접 넘깁니다.
+    // 이렇게 하면 브라우저의 화면 가시성(Visibility) 설정에 영향을 받지 않아 빈 문서 오류가 원천 차단됩니다.
     const pdfStyleText = `
-      .markdown-body { font-family: ${settings.fontFamily}; font-size: ${settings.fontSize}px; line-height: ${settings.lineSpacing}; color: #1f2937; }
-      .markdown-body h1 { font-size: 2.25rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 3px solid #1f2937; padding-bottom: 0.4rem; color: #111827; }
-      .markdown-body h2 { font-size: 1.75rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3rem; color: #1f2937; }
-      .markdown-body h3 { font-size: 1.35rem; font-weight: bold; margin-top: 1.2rem; margin-bottom: 0.8rem; color: #374151; }
-      .markdown-body p { margin-bottom: 1rem; word-break: break-all; }
-      .markdown-body ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
-      .markdown-body ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
-      .markdown-body strong { font-weight: bold; color: #111827; }
-      .markdown-body blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #4b5563; margin-bottom: 1rem; background: #f9fafb; padding: 0.5rem 1rem; }
-      .markdown-body code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; color: #ef4444; font-size: 0.9em; }
-      .markdown-body pre { background: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 8px; overflow-x: auto; margin-bottom: 1rem; white-space: pre-wrap; word-break: break-word; }
-      .markdown-body pre code { background: transparent; color: inherit; padding: 0; font-size: 0.9em; }
+      <style>
+        .pdf-container { padding: 40px; font-family: ${settings.fontFamily}, sans-serif; font-size: ${settings.fontSize}px; line-height: ${settings.lineSpacing}; background: white; color: #1f2937; }
+        .markdown-body h1 { font-size: 2.25rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 3px solid #1f2937; padding-bottom: 0.4rem; color: #111827; }
+        .markdown-body h2 { font-size: 1.75rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3rem; color: #1f2937; }
+        .markdown-body h3 { font-size: 1.35rem; font-weight: bold; margin-top: 1.2rem; margin-bottom: 0.8rem; color: #374151; }
+        .markdown-body p { margin-bottom: 1rem; word-break: break-all; }
+        .markdown-body ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-body ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-body strong { font-weight: bold; color: #111827; }
+        .markdown-body blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #4b5563; margin-bottom: 1rem; background: #f9fafb; padding: 0.5rem 1rem; }
+        .markdown-body code { background: #f3f4f6; padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; color: #ef4444; font-size: 0.9em; }
+        .markdown-body pre { background: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 8px; overflow-x: auto; margin-bottom: 1rem; white-space: pre-wrap; word-break: break-word; }
+        .markdown-body pre code { background: transparent; color: inherit; padding: 0; font-size: 0.9em; }
+      </style>
     `;
 
-    container.innerHTML = `
-      <style>${pdfStyleText}</style>
-      <div class="markdown-body">
+    const htmlString = `
+      ${pdfStyleText}
+      <div class="pdf-container">
         <div style="text-align: center; margin-bottom: 2rem; border-bottom: 4px solid #1f2937; padding-bottom: 1rem;">
           <h1 style="font-size: 2.25rem; font-weight: bold; margin: 0; color: #111827;">${title}</h1>
           ${filePrefix ? `<p style="color: #6b7280; margin-top: 0.5rem; font-size: 1.125rem;">프로젝트 접두사: ${filePrefix}</p>` : ''}
         </div>
-        <div>${htmlContent}</div>
+        <div class="markdown-body">${htmlContent}</div>
       </div>
     `;
-
-    document.body.appendChild(container);
 
     const opt = {
       margin: 15,
@@ -280,13 +266,10 @@ export default function App() {
     };
 
     try {
-      // 컴파일 타임에 레이아웃 렌더링이 완전히 마칠 수 있도록 짧은 브라우저 대기시간 부여
-      await new Promise(r => setTimeout(r, 100));
-      await window.html2pdf().from(container).set(opt).save();
+      await window.html2pdf().from(htmlString).set(opt).save();
     } catch (err) {
       console.error('PDF 생성 중 오류 발생:', err);
-    } finally {
-      document.body.removeChild(container);
+      setMsgModal({ show: true, title: '오류', message: 'PDF 생성 중 문제가 발생했습니다.' });
     }
   };
 
