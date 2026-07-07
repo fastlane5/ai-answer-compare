@@ -33,15 +33,30 @@
 <div id="app" class="flex flex-col bg-gray-50 font-sans w-full h-screen overflow-hidden relative transition-all duration-500">
   
   <!-- 1. 상단 글로벌 컨트롤 패널 -->
-  <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10">
+  <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10 w-full">
     <div class="flex items-center justify-between w-full sm:w-auto">
-      <h1 class="text-lg sm:text-xl font-bold text-gray-800">AI 답변 비교</h1>
+      <div class="flex flex-col">
+        <h1 class="text-lg sm:text-xl font-bold text-gray-800">AI 답변 비교</h1>
+        <!-- 💡 정상가치 제작 표시 및 브런치 / 블로그 하이퍼링크 (자동 새창 연결) -->
+        <div class="text-[10px] sm:text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+          <span class="font-medium text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">정상가치 제작</span>
+          <a href="https://brunch.co.kr/@fastlane2" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 hover:underline flex items-center gap-0.5">
+            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            브런치
+          </a>
+          <span class="text-gray-300">|</span>
+          <a href="https://blog.naver.com/richwriting" target="_blank" rel="noopener noreferrer" class="hover:text-green-600 hover:underline flex items-center gap-0.5">
+            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 21H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v10.5"></path><path d="m15.5 18 2.5 2.5 5-5"></path><path d="M12 11h.01"></path><path d="M16 11h.01"></path><path d="M8 11h.01"></path></svg>
+            블로그
+          </a>
+        </div>
+      </div>
       <button id="btnView" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full border text-sm ml-4">
         <i data-lucide="smartphone" class="w-4 h-4"></i>
         <span id="viewText">모바일 가로보기</span>
       </button>
     </div>
-    <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto w-full sm:w-auto custom-scrollbar">
+    <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 custom-scrollbar">
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold">글꼴:</label>
         <select id="fontSel" class="border rounded p-1 w-28 text-xs outline-none focus:border-blue-500"></select>
