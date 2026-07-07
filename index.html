@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 💡 즐겨찾기 시 노출될 웹페이지 타이틀을 "AI 답변 비교"로 명확하게 변경했습니다 -->
 <title>AI 답변 비교</title>
+
+<!-- 💡 브라우저 및 검색엔진, OneTab 수집 봇을 위한 메타정보 강제 설정 (React 흔적 원천 차단) -->
+<meta name="application-name" content="AI 답변 비교" />
+<meta name="apple-mobile-web-app-title" content="AI 답변 비교" />
+<meta name="theme-color" content="#1e293b" />
+
+<!-- 💡 기존 리액트 파비콘(회전하는 파란 원자) 캐시를 덮어씌울 세련된 📝 이모지 파비콘 강제 지정 -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -38,7 +46,7 @@
     <div class="flex items-center justify-between w-full sm:w-auto">
       <div class="flex flex-col">
         <h1 class="text-lg sm:text-xl font-bold text-gray-800">AI 답변 비교</h1>
-        <!-- 💡 정상가치 제작 표시 및 브런치 / 블로그 하이퍼링크 (자동 새창 연결) -->
+        <!-- 정상가치 제작 표시 및 브런치 / 블로그 하이퍼링크 (자동 새창 연결) -->
         <div class="text-[10px] sm:text-xs text-gray-500 flex items-center gap-2 mt-0.5">
           <span class="font-medium text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">정상가치 제작</span>
           <a href="https://brunch.co.kr/@fastlane2" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 hover:underline flex items-center gap-0.5">
@@ -97,14 +105,14 @@
       
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
-        <button id="pdfCur" class="flex items-center gap-1 px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
+        <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
         <button id="pdfAll" class="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
         <button id="pdfEach" class="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
       
       <!-- TXT 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
-        <button id="txtCur" class="flex items-center gap-1 px-2 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs" title="현재 탭 TXT 저장"><i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 TXT</span></button>
+        <button id="txtCur" class="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs" title="현재 탭 TXT 저장"><i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 TXT</span></button>
         <button id="txtAll" class="flex items-center gap-1 px-2 py-1.5 bg-blue-100 text-blue-800 border border-blue-300 rounded text-xs font-semibold" title="전체 통합 TXT 저장"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 TXT</span></button>
         <button id="txtEach" class="flex items-center gap-1 px-2 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold" title="전체 개별 TXT 저장"><i data-lucide="files" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 TXT</span></button>
       </div>
@@ -165,6 +173,9 @@
 </div>
 
 <script>
+// 실시간 브라우저 타이틀 강제 재동기화 (OneTab 메모리 캐시 및 수집기 강제 제어)
+document.title = "AI 답변 비교";
+
 // 전역 설정 상수 목록
 const TAB_NAMES = ["제미나이pro","제미나이3.5","챗GPT","클로드","퍼플렉서티","라마4","그록4","META"];
 const FONTS = ["sans-serif","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","serif","monospace"];
@@ -348,7 +359,7 @@ async function genPdf(title, content, file) {
     <style>
       .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
       
-      /* 🚨 핵심: 문장블록, 목록, 표의 줄, 제목, 코드 블록이 임의로 잘리지 않도록 제어 */
+      /* 핵심: 문장블록, 목록, 표의 줄, 제목, 코드 블록이 임의로 잘리지 않도록 제어 */
       .pdf-md p, .pdf-md li, .pdf-md blockquote, .pdf-md pre, .pdf-md tr, .pdf-md h1, .pdf-md h2, .pdf-md h3, .pdf-md figure {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
