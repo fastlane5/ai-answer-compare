@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AI 답변 비교</title>
+<script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -223,7 +224,7 @@ function render() {
   $('tabSize').value = state.settings.tabFontSize;
   $('preLabel').textContent = state.prefix || '(없음)';
   
-  // 2. 글자수 및 단어수 연산 표시
+  // 2. 글자수 및 단어수 연산 표���
   if (active) {
     const charCount = active.content.replace(/\n+$/, '').length;
     const charNoSpace = active.content.replace(/\s/g, '').length;
