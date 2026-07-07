@@ -3,22 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 💡 즐겨찾기 및 OneTab 노출 타이틀 강제 지정 -->
 <title>AI 답변 비교</title>
+<script>document.title = "AI 답변 비교";</script>
 
-<!-- 💡 옛날 React App의 manifest.json 캐시를 완벽히 차단하고 덮어쓰는 인라인 매니페스트 설정 -->
-<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
-
-<!-- 💡 브라우저 및 검색엔진, OneTab 수집 봇을 위한 메타정보 강제 설정 -->
+<!-- OneTab, 검색엔진용 메타 정보 -->
 <meta name="application-name" content="AI 답변 비교" />
 <meta name="apple-mobile-web-app-title" content="AI 답변 비교" />
 <meta name="theme-color" content="#1e293b" />
+<meta property="og:title" content="AI 답변 비교" />
+<meta property="og:site_name" content="AI 답변 비교" />
+<meta name="description" content="여러 AI의 답변을 탭으로 비교하고 PDF/TXT로 저장하는 도구">
 
-<!-- 💡 기존 리액트 파비콘(회전하는 파란 원자) 캐시를 덮어씌울 세련된 📝 이모지 파비콘 강제 지정 -->
+<!-- 파비콘 강제 지정 -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
@@ -35,36 +36,36 @@
 .markdown-body ul{list-style:disc;margin-left:1.5em;margin-bottom:1em}
 .markdown-body ol{list-style:decimal;margin-left:1.5em;margin-bottom:1em}
 .markdown-body blockquote{border-left:4px solid #d1d5db;padding-left:1em;color:#4b5563;margin-bottom:1em;background:#f9fafb;padding:.5em 1em}
-.markdown-body code{background:#f3f4f6;padding:.2em .4em;border-radius:3px;font-family:monospace;color:#ef4444;font-size:.9em}
+.markdown-body code{background:#f3f4f6;padding:.2em.4em;border-radius:3px;font-family:monospace;color:#ef4444;font-size:.9em}
 .markdown-body pre{background:#1f2937;color:#f9fafb;padding:1em;border-radius:8px;overflow-x:auto;margin-bottom:1em;white-space:pre-wrap}
 .markdown-body table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:0.95em}
-.markdown-body th, .markdown-body td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left}
+.markdown-body th,.markdown-body td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left}
 .markdown-body th{background-color:#f3f4f6;font-weight:bold}
 </style>
 </head>
 <body class="bg-gray-800 min-h-screen flex items-center justify-center print:bg-white transition-colors duration-300">
 <div id="app" class="flex flex-col bg-gray-50 font-sans w-full h-screen overflow-hidden relative transition-all duration-500">
-  
+
   <!-- 1. 상단 글로벌 컨트롤 패널 -->
   <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10 w-full">
     <div class="flex items-center justify-between w-full sm:w-auto">
       <div class="flex flex-col">
         <h1 class="text-lg sm:text-xl font-bold text-gray-800">AI 답변 비교</h1>
-        <!-- 정상가치 제작 표시 및 브런치 / 블로그 하이퍼링크 (자동 새창 연결) -->
-        <div class="text-[10px] sm:text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+        <!-- 정상가치 제작 표시 및 브런치 / 블로그 하이퍼링크 -->
+        <div class="text- sm:text-xs text-gray-500 flex items-center gap-2 mt-0.5">
           <span class="font-medium text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">정상가치 제작</span>
           <a href="https://brunch.co.kr/@fastlane2" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 hover:underline flex items-center gap-0.5">
-            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
             브런치
           </a>
           <span class="text-gray-300">|</span>
           <a href="https://blog.naver.com/richwriting" target="_blank" rel="noopener noreferrer" class="hover:text-green-600 hover:underline flex items-center gap-0.5">
-            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 21H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v10.5"></path><path d="m15.5 18 2.5 2.5 5-5"></path><path d="M12 11h.01"></path><path d="M16 11h.01"></path><path d="M8 11h.01"></path></svg>
+            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 21H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h18a2 2 0 0 1 2 2v10.5"></path><path d="m15.5 18 2.5 5-5"></path><path d="M12 11h.01"></path><path d="M16 11h.01"></path><path d="M8 11h.01"></path></svg>
             블로그
           </a>
         </div>
       </div>
-      <button id="btnView" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full border text-sm ml-4">
+      <button id="btnView" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full border text-sm ml-4" aria-label="모바일 보기 전환">
         <i data-lucide="smartphone" class="w-4 h-4"></i>
         <span id="viewText">모바일 가로보기</span>
       </button>
@@ -98,27 +99,27 @@
   <!-- 3. 현재 탭 조작 도구 바 -->
   <div class="bg-white border-b px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm z-10 overflow-x-auto gap-3 custom-scrollbar">
     <div class="flex items-center gap-1 flex-shrink-0">
-      <button id="moveL" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
-      <button id="moveR" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
-      <div class="w-px h-4 bg-gray-300 mx-1 sm:mx-2"></div>
-      <button id="rename" class="flex items-center gap-1 px-2 py-1 border rounded hover:bg-gray-100 text-xs"><i data-lucide="edit-2" class="w-3 h-3"></i><span class="hidden sm:inline">이름 변경</span></button>
-      <button id="delTab" class="flex items-center gap-1 px-2 py-1 border rounded text-red-500 hover:bg-red-50 text-xs"><i data-lucide="trash-2" class="w-3 h-3"></i><span class="hidden sm:inline">탭 삭제</span></button>
+      <button id="moveL" class="p-1.5 border rounded hover:bg-gray-100" aria-label="왼쪽으로 이동"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
+      <button id="moveR" class="p-1.5 border rounded hover:bg-gray-100" aria-label="오른쪽으로 이동"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
+      <div class="w-px h-4 bg-gray-300 mx-1"></div>
+      <button id="rename" class="flex items-center gap-1 px-2 py-1 border rounded hover:bg-gray-100 text-xs" aria-label="탭 이름 변경"><i data-lucide="edit-2" class="w-3 h-3"></i><span class="hidden sm:inline">이름 변경</span></button>
+      <button id="delTab" class="flex items-center gap-1 px-2 py-1 border rounded text-red-500 hover:bg-red-50 text-xs" aria-label="탭 삭제"><i data-lucide="trash-2" class="w-3 h-3"></i><span class="hidden sm:inline">탭 삭제</span></button>
     </div>
     <div class="flex items-center gap-1.5 flex-shrink-0">
       <button id="previewBtn" class="flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border"></button>
-      
+
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
-        <button id="pdfAll" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
-        <button id="pdfEach" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
+        <button id="pdfAll" class="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
+        <button id="pdfEach" class="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
-      
+
       <!-- TXT 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="txtCur" class="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs" title="현재 탭 TXT 저장"><i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 TXT</span></button>
-        <button id="txtAll" class="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 border border-blue-300 rounded text-xs font-semibold" title="전체 통합 TXT 저장"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 TXT</span></button>
-        <button id="txtEach" class="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white rounded text-xs font-semibold" title="전체 개별 TXT 저장"><i data-lucide="files" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 TXT</span></button>
+        <button id="txtAll" class="flex items-center gap-1 px-2 py-1.5 bg-blue-100 text-blue-800 border border-blue-300 rounded text-xs font-semibold" title="전체 통합 TXT 저장"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 TXT</span></button>
+        <button id="txtEach" class="flex items-center gap-1 px-2 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold" title="전체 개별 TXT 저장"><i data-lucide="files" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 TXT</span></button>
       </div>
     </div>
   </div>
@@ -142,7 +143,7 @@
 
   <!-- 4. 에디터 및 마크다운 렌더링 영역 -->
   <div class="flex-1 bg-white relative flex flex-col p-2 sm:p-4 shadow-inner overflow-hidden">
-    <textarea id="editor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
+    <textarea id="editor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2 min-h-" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
     <div id="preview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-2 markdown-body text-gray-800 hidden"></div>
   </div>
 </div>
@@ -177,9 +178,6 @@
 </div>
 
 <script>
-// 실시간 브라우저 타이틀 강제 재동기화 (OneTab 메모리 캐시 및 수집기 강제 제어)
-document.title = "AI 답변 비교";
-
 // 전역 설정 상수 목록
 const TAB_NAMES = ["제미나이pro","제미나이3.5","챗GPT","클로드","퍼플렉서티","라마4","그록4","META"];
 const FONTS = ["sans-serif","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","serif","monospace"];
@@ -195,7 +193,7 @@ let state = {
   tabs: [],
   activeId: '',
   settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"sans-serif","fontSize":16,"tabFontSize":14,"lineSpacing":1.5}'),
-  isPreview: false, 
+  isPreview: false,
   isMobile: false,
   editingId: null
 };
@@ -203,49 +201,58 @@ let state = {
 // 로컬 데이터 수합 및 예외 백업 복구
 try {
   const saved = localStorage.getItem('yt-script-tabs');
-  if (saved) { 
-    state.tabs = JSON.parse(saved); 
-    state.activeId = state.tabs[0]?.id || ''; 
-  } else { 
-    state.tabs = TAB_NAMES.map((n, i) => ({ id: `tab-${i}`, title: n, content: '' })); 
-    state.activeId = state.tabs[0].id; 
+  if (saved) {
+    state.tabs = JSON.parse(saved);
+    state.activeId = state.tabs[0]?.id || '';
+  } else {
+    state.tabs = TAB_NAMES.map((n, i) => ({ id: `tab-${i}`, title: n, content: '' }));
+    state.activeId = state.tabs[0].id;
   }
-} catch { 
-  state.tabs = TAB_NAMES.map((n, i) => ({ id: `tab-${i}`, title: n, content: '' })); 
-  state.activeId = state.tabs[0].id; 
+} catch {
+  state.tabs = TAB_NAMES.map((n, i) => ({ id: `tab-${i}`, title: n, content: '' }));
+  state.activeId = state.tabs[0].id;
 }
 
 const $ = id => document.getElementById(id);
 
-// 성능 최적화용 Debounce 디바운스 자동 저장 타이머
-let timer = null; 
-const save = () => { 
-  clearTimeout(timer); 
-  timer = setTimeout(() => { 
-    localStorage.setItem('yt-script-tabs', JSON.stringify(state.tabs)); 
-    localStorage.setItem('yt-script-settings', JSON.stringify(state.settings)); 
-    localStorage.setItem('yt-script-prefix', state.prefix); 
-  }, 400); 
+// 성능 최적화용 Debounce 디바운스 자동 저장 타이머 + 용량 체크
+let timer = null;
+const save = () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    try {
+      const data = JSON.stringify(state.tabs);
+      if (data.length > 4500000) { // 4.5MB 제한
+        msg('저장 공간 부족', '내용이 너무 많아요. 일부 탭을 삭제해주세요.');
+        return;
+      }
+      localStorage.setItem('yt-script-tabs', data);
+      localStorage.setItem('yt-script-settings', JSON.stringify(state.settings));
+      localStorage.setItem('yt-script-prefix', state.prefix);
+    } catch (e) {
+      msg('저장 실패', '브라우저 저장 공간이 부족합니다.');
+    }
+  }, 400);
 };
 
-// UI 상태 그리기 (동적 마크다운 해석 포함)
+// UI 상태 그리기
 function render() {
   const active = state.tabs.find(t => t.id === state.activeId);
-  
+
   // 1. 설정 셀렉트 및 폼 바인딩
-  $('fontSel').innerHTML = FONTS.map(f => `<option value="${f}" ${state.settings.fontFamily === f ? 'selected' : ''}>${f}</option>`).join('');
-  $('lineSel').innerHTML = LINES.map(l => `<option value="${l}" ${String(state.settings.lineSpacing) === l ? 'selected' : ''}>${l}</option>`).join('');
-  $('fontSize').value = state.settings.fontSize; 
+  $('fontSel').innerHTML = FONTS.map(f => `<option value="${f}" ${state.settings.fontFamily === f? 'selected' : ''}>${f}</option>`).join('');
+  $('lineSel').innerHTML = LINES.map(l => `<option value="${l}" ${String(state.settings.lineSpacing) === l? 'selected' : ''}>${l}</option>`).join('');
+  $('fontSize').value = state.settings.fontSize;
   $('tabSize').value = state.settings.tabFontSize;
   $('preLabel').textContent = state.prefix || '(없음)';
-  
+
   // 2. 글자수 및 단어수 연산 표시
   if (active) {
     const charCount = active.content.replace(/\n+$/, '').length;
     const charNoSpace = active.content.replace(/\s/g, '').length;
-    const wordCount = active.content.trim() ? active.content.trim().split(/\s+/).length : 0;
-    
-    $('expName').textContent = `👉 예상 파일명: ${state.prefix ? sanitize(state.prefix) + '-' : ''}${sanitize(active.title)}.txt`;
+    const wordCount = active.content.trim()? active.content.trim().split(/\s+/).length : 0;
+
+    $('expName').textContent = `👉 예상 파일명: ${state.prefix? sanitize(state.prefix) + '-' : ''}${sanitize(active.title)}.txt`;
     $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
   } else {
     $('expName').textContent = '';
@@ -260,10 +267,10 @@ function render() {
         <div class="relative flex-shrink-0 group">
           <div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
             <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" />
-            <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded">
+            <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded" aria-label="저장">
               <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </button>
-            <button id="cancelRenameBtn" class="text-red-500 hover:bg-red-50 p-1 rounded">
+            <button id="cancelRenameBtn" class="text-red-500 hover:bg-red-50 p-1 rounded" aria-label="취소">
               <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
@@ -272,11 +279,11 @@ function render() {
     }
     return `
       <div class="relative flex-shrink-0 group">
-        <button data-id="${t.id}" class="tabBtn px-3 sm:px-4 py-1.5 sm:py-2 mx-0.5 rounded-t-lg border-t border-l border-r font-semibold whitespace-nowrap ${isA ? 'bg-white border-gray-300 text-blue-600 shadow-[0_2px_0_0_white]' : 'bg-gray-200 border-transparent text-gray-500 hover:bg-gray-300'}" style="font-size:${state.settings.tabFontSize}px">
-          ${esc(t.title)}${t.content.trim() ? '<span class="ml-1.5 sm:ml-2 inline-block w-2 h-2 bg-green-400 rounded-full"></span>' : ''}
+        <button data-id="${t.id}" class="tabBtn px-3 sm:px-4 py-1.5 sm:py-2 mx-0.5 rounded-t-lg border-t border-l border-r font-semibold whitespace-nowrap ${isA? 'bg-white border-gray-300 text-blue-600 shadow-[0_2px_0_0_white]' : 'bg-gray-200 border-transparent text-gray-500 hover:bg-gray-300'}" style="font-size:${state.settings.tabFontSize}px">
+          ${esc(t.title)}${t.content.trim()? '<span class="ml-1.5 sm:ml-2 inline-block w-2 h-2 bg-green-400 rounded-full"></span>' : ''}
         </button>
       </div>`;
-  }).join('') + `<button id="addTab" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-t-lg font-bold ml-1">+</button>`;
+  }).join('') + `<button id="addTab" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-t-lg font-bold ml-1" aria-label="새 탭 추가">+</button>`;
 
   // 동적 생성된 탭 바인딩 직후 포커스 처리
   if (state.editingId) {
@@ -296,95 +303,95 @@ function render() {
   // 4. 에디터 폰트 속성 부여
   const ed = $('editor'), pv = $('preview');
   if (active) {
-    ed.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`; 
+    ed.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`;
     pv.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`;
-    ed.style.fontSize = state.settings.fontSize + 'px'; 
+    ed.style.fontSize = state.settings.fontSize + 'px';
     pv.style.fontSize = state.settings.fontSize + 'px';
-    ed.style.lineHeight = state.settings.lineSpacing; 
+    ed.style.lineHeight = state.settings.lineSpacing;
     pv.style.lineHeight = state.settings.lineSpacing;
     ed.value = active.content;
-    
-    if (state.isPreview) { 
-      ed.classList.add('hidden'); 
-      pv.classList.remove('hidden'); 
-      pv.innerHTML = window.marked ? marked.parse(active.content || '내용이 없습니다.') : esc(active.content); 
-    } else { 
-      pv.classList.add('hidden'); 
-      ed.classList.remove('hidden'); 
-      ed.placeholder = `${active.title} 답변을 입력하세요...\n(내용은 브라우저에 자동 저장됩니다)`; 
+
+    if (state.isPreview) {
+      ed.classList.add('hidden');
+      pv.classList.remove('hidden');
+      // DOMPurify로 XSS 방지
+      const rawHtml = window.marked? marked.parse(active.content || '내용이 없습니다.') : esc(active.content);
+      pv.innerHTML = window.DOMPurify? DOMPurify.sanitize(rawHtml) : rawHtml;
+    } else {
+      pv.classList.add('hidden');
+      ed.classList.remove('hidden');
+      ed.placeholder = `${active.title} 답변을 입력하세요...\n(내용은 브라우저에 자동 저장됩니다)`;
     }
   }
 
   // 5. 토글 버튼 마크업 갱신
-  $('previewBtn').innerHTML = state.isPreview ? `<i data-lucide="code" class="w-3.5 h-3.5"></i> 편집 모드` : `<i data-lucide="eye" class="w-3.5 h-3.5"></i> 미리보기`;
-  $('previewBtn').className = state.isPreview ? 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium' : 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-medium';
-  $('viewText').textContent = state.isMobile ? 'PC 보기' : '모바일 가로보기';
-  
+  $('previewBtn').innerHTML = state.isPreview? `<i data-lucide="code" class="w-3.5 h-3.5"></i> 편집 모드` : `<i data-lucide="eye" class="w-3.5 h-3.5"></i> 미리보기`;
+  $('previewBtn').className = state.isPreview? 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium' : 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-medium';
+  $('viewText').textContent = state.isMobile? 'PC 보기' : '모바일 가로보기';
+
   // 가로 스마트폰 목업 스케일 및 클래스 바인딩
-  $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 ${state.isMobile ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' : 'w-full h-screen'}`;
-  
-  // Lucide 아이콘 재생성 (버그 없는 동적 바인딩 보장)
+  $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 ${state.isMobile? 'w-full max-w- h- shadow-2xl sm:rounded- sm:border- sm:border-black' : 'w-full h-screen'}`;
+
+  // Lucide 아이콘 재생성
   lucide.createIcons();
 }
 
-function msg(t, m) { 
-  $('msgT').textContent = t; 
-  $('msgM').textContent = m; 
-  $('msgModal').classList.remove('hidden'); 
-  $('msgModal').classList.add('flex'); 
-  lucide.createIcons(); 
+function msg(t, m) {
+  $('msgT').textContent = t;
+  $('msgM').textContent = m;
+  $('msgModal').classList.remove('hidden');
+  $('msgModal').classList.add('flex');
+  lucide.createIcons();
 }
 
-function dl(name, content) { 
-  const b = new Blob([content], { type: 'text/plain;charset=utf-8' }); 
-  const u = URL.createObjectURL(b); 
-  const a = document.createElement('a'); 
-  a.href = u; 
-  a.download = sanitize(name); 
-  document.body.appendChild(a); 
-  a.click(); 
-  a.remove(); 
-  URL.revokeObjectURL(u); 
+function dl(name, content) {
+  const b = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a');
+  a.href = u;
+  a.download = sanitize(name);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(u);
 }
 
-// 🚀 백그라운드 무진동 초스피드 PDF 다이렉트 컨버터 엔진 (페이지 중간 끊김 방지 업그레이드)
+// PDF 다이렉트 컨버터 엔진
 async function genPdf(title, content, file) {
-  if (!window.html2pdf || !window.marked) { 
-    msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
-    return; 
+  if (!window.html2pdf ||!window.marked) {
+    msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.');
+    return;
   }
-  
+
   const safeTitle = esc(title);
   const safePrefix = esc(state.prefix);
   const htmlContent = window.marked.parse(content || '*내용 없음*');
+  const sanitizedHtml = window.DOMPurify? DOMPurify.sanitize(htmlContent) : htmlContent;
 
-  // PDF 전용 독립 정밀 렌더링 스타일 (페이지 잘림 방지 속성 강제 주입)
+  // PDF 전용 독립 정밀 렌더링 스타일
   const pdfStyle = `
     <style>
-      .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
-      
-      /* 핵심: 문장블록, 목록, 표의 줄, 제목, 코드 블록이 임의로 잘리지 않도록 제어 */
-      .pdf-md p, .pdf-md li, .pdf-md blockquote, .pdf-md pre, .pdf-md tr, .pdf-md h1, .pdf-md h2, .pdf-md h3, .pdf-md figure {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        break-inside: avoid-page !important;
+     .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
+
+     .pdf-md p,.pdf-md li,.pdf-md blockquote,.pdf-md pre,.pdf-md tr,.pdf-md h1,.pdf-md h2,.pdf-md h3,.pdf-md figure {
+        page-break-inside: avoid!important;
+        break-inside: avoid!important;
       }
-      
-      .pdf-md h1{font-size:2em; font-weight:bold; margin:1.5rem 0 1rem; border-bottom:3px solid #111; padding-bottom:0.4rem;}
-      .pdf-md h2{font-size:1.6em; font-weight:bold; margin:1.2rem 0 0.8rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.3rem;}
-      .pdf-md h3{font-size:1.3em; font-weight:bold; margin:1rem 0 0.6rem;}
-      .pdf-md p{margin-bottom:1rem;}
-      .pdf-md ul{list-style:disc; margin-left:1.5rem; margin-bottom:1rem;}
-      .pdf-md ol{list-style:decimal; margin-left:1.5rem; margin-bottom:1rem;}
-      .pdf-md blockquote{border-left:4px solid #d1d5db; padding:0.5rem 1rem; background:#f9fafb; margin-bottom:1rem;}
-      .pdf-md pre{background:#1f2937; color:#f9fafb; padding:1rem; border-radius:8px; white-space:pre-wrap; word-break:break-all;}
-      .pdf-md code{background:#f3f4f6; padding:0.2rem 0.4rem; border-radius:4px; color:#ef4444;}
-      
-      /* PDF 내부 테이블(표) 레이아웃 최적화 */
-      .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; page-break-inside: auto; }
-      .pdf-md tr { page-break-inside: avoid !important; break-inside: avoid !important; }
-      .pdf-md th, .pdf-md td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-size: 0.9em; word-break: keep-all; }
-      .pdf-md th { background-color: #f1f5f9; font-weight: bold; }
+
+     .pdf-md h1{font-size:2em; font-weight:bold; margin:1.5rem 0 1rem; border-bottom:3px solid #111; padding-bottom:0.4rem;}
+     .pdf-md h2{font-size:1.6em; font-weight:bold; margin:1.2rem 0 0.8rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.3rem;}
+     .pdf-md h3{font-size:1.3em; font-weight:bold; margin:1rem 0 0.6rem;}
+     .pdf-md p{margin-bottom:1rem;}
+     .pdf-md ul{list-style:disc; margin-left:1.5rem; margin-bottom:1rem;}
+     .pdf-md ol{list-style:decimal; margin-left:1.5rem; margin-bottom:1rem;}
+     .pdf-md blockquote{border-left:4px solid #d1d5db; padding:0.5rem 1rem; background:#f9fafb; margin-bottom:1rem;}
+     .pdf-md pre{background:#1f2937; color:#f9fafb; padding:1rem; border-radius:8px; white-space:pre-wrap; word-break:break-all;}
+     .pdf-md code{background:#f3f4f6; padding:0.2rem 0.4rem; border-radius:4px; color:#ef4444;}
+
+     .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; page-break-inside: auto; }
+     .pdf-md tr { page-break-inside: avoid!important; break-inside: avoid!important; }
+     .pdf-md th,.pdf-md td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-size: 0.9em; word-break: keep-all; }
+     .pdf-md th { background-color: #f1f5f9; font-weight: bold; }
     </style>
   `;
 
@@ -393,20 +400,18 @@ async function genPdf(title, content, file) {
     <div class="pdf-box">
       <div style="text-align:center; border-bottom:4px solid #1f2937; padding-bottom:1rem; margin-bottom:2rem">
         <h1 style="font-size:28px; font-weight:800; margin:0; color:#111827">${safeTitle}</h1>
-        ${safePrefix ? `<p style="color:#6b7280; margin-top:8px">프로젝트 접두사: ${safePrefix}</p>` : ''}
+        ${safePrefix? `<p style="color:#6b7280; margin-top:8px">프로젝트 접두사: ${safePrefix}</p>` : ''}
       </div>
-      <div class="pdf-md">${htmlContent}</div>
+      <div class="pdf-md">${sanitizedHtml}</div>
     </div>
   `;
 
-  // html2pdf 정밀 변환 빌드 설정
   const opt = {
-    margin: 12, 
+    margin: 12,
     filename: sanitize(file),
-    image: { type: 'jpeg', quality: .98 },
+    image: { type: 'jpeg', quality:.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    // css 및 legacy 모드를 복합 활성화하여 page-break-inside를 완벽하게 탐지
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
@@ -421,9 +426,9 @@ async function genPdf(title, content, file) {
 // 탭 이름 변경 제어 핸들러
 function finishRename(newTitle) {
   if (!newTitle.trim()) { cancelRename(); return; }
-  state.tabs = state.tabs.map(t => t.id === state.editingId ? { ...t, title: newTitle.trim() } : t);
+  state.tabs = state.tabs.map(t => t.id === state.editingId? {...t, title: newTitle.trim() } : t);
   state.editingId = null;
-  save(); 
+  save();
   render();
 }
 
@@ -434,11 +439,11 @@ function cancelRename() {
 
 // === 이벤트 핸들러 ===
 document.addEventListener('click', e => {
-  const b = e.target.closest('.tabBtn'); 
-  if (b) { 
-    state.activeId = b.dataset.id; 
-    render(); 
-    return; 
+  const b = e.target.closest('.tabBtn');
+  if (b) {
+    state.activeId = b.dataset.id;
+    render();
+    return;
   }
   if (e.target.id === 'addTab') {
     const id = `tab-${Date.now()}`; state.tabs.push({id,title:'새 탭',content:''}); state.activeId = id; save(); render();
@@ -446,177 +451,17 @@ document.addEventListener('click', e => {
 });
 
 // 더블클릭 변경 지원
-$('tabBar').addEventListener('dblclick', e => { 
-  const b = e.target.closest('.tabBtn'); 
-  if (!b) return; 
+$('tabBar').addEventListener('dblclick', e => {
+  const b = e.target.closest('.tabBtn');
+  if (!b) return;
   state.editingId = b.dataset.id;
   render();
 });
 
-$('editor').addEventListener('input', e => { 
-  state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: e.target.value } : t); 
-  save(); 
-  
-  // 실시간 글자수 및 단어수 업데이트 (에디터 끊김 현상 방지를 위해 UI의 카운터 영역만 즉시 업데이트)
+$('editor').addEventListener('input', e => {
+  state.tabs = state.tabs.map(t => t.id === state.activeId? {...t, content: e.target.value } : t);
+  save();
+
   const charCount = e.target.value.replace(/\n+$/, '').length;
   const charNoSpace = e.target.value.replace(/\s/g, '').length;
-  const wordCount = e.target.value.trim() ? e.target.value.trim().split(/\s+/).length : 0;
-  $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
-});
-
-// 입력 제어 바인딩
-$('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
-$('lineSel').onchange = e => { state.settings.lineSpacing = parseFloat(e.target.value); save(); render(); };
-$('fontSize').oninput = e => { state.settings.fontSize = parseInt(e.target.value) || 16; save(); render(); };
-$('tabSize').oninput = e => { state.settings.tabFontSize = parseInt(e.target.value) || 14; save(); render(); };
-
-$('moveL').onclick = () => { 
-  const i = state.tabs.findIndex(t => t.id === state.activeId); 
-  if (i > 0) { 
-    [state.tabs[i], state.tabs[i-1]] = [state.tabs[i-1], state.tabs[i]]; 
-    save(); 
-    render(); 
-  } 
-};
-$('moveR').onclick = () => { 
-  const i = state.tabs.findIndex(t => t.id === state.activeId); 
-  if (i < state.tabs.length - 1) { 
-    [state.tabs[i], state.tabs[i+1]] = [state.tabs[i+1], state.tabs[i]]; 
-    save(); 
-    render(); 
-  } 
-};
-
-$('rename').onclick = () => { 
-  state.editingId = state.activeId;
-  render();
-};
-
-$('delTab').onclick = () => { 
-  if (state.tabs.length <= 1) return msg('삭제 불가', '최소 1개 탭 유지'); 
-  if (!confirm('정말 삭제하시겠습니까?')) return; 
-  state.tabs = state.tabs.filter(t => t.id !== state.activeId); 
-  state.activeId = state.tabs[0]?.id || ''; 
-  save(); 
-  render(); 
-};
-
-$('previewBtn').onclick = () => { state.isPreview = !state.isPreview; render(); };
-$('btnView').onclick = () => { state.isMobile = !state.isMobile; render(); };
-$('setPre').onclick = () => { $('preInput').value = state.prefix; $('preModal').classList.remove('hidden'); $('preModal').classList.add('flex'); $('preInput').focus(); };
-$('preCancel').onclick = () => $('preModal').classList.add('hidden');
-$('preOk').onclick = () => { state.prefix = $('preInput').value.trim(); $('preModal').classList.add('hidden'); save(); render(); };
-$('msgOk').onclick = () => $('msgModal').classList.add('hidden');
-
-$('clearCur').onclick = () => { 
-  const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('알림', '이미 비어있음'); 
-  if (confirm(`"${a.title}" 내용을 모두 지우시겠습니까?`)) { 
-    state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: '' } : t); 
-    save(); 
-    render(); 
-  } 
-};
-
-$('clearAll').onclick = () => { 
-  if (!confirm('🚨 모든 탭의 답변 내용이 영구 삭제되며 파일명 접두사도 초기화됩니다. 계속하시겠습니까?')) return; 
-  state.tabs = state.tabs.map(t => ({ ...t, content: '' })); 
-  state.prefix = ''; 
-  save(); 
-  render(); 
-  msg('완료', '모든 대본과 접두사가 초기화되었습니다.'); 
-};
-
-// === TXT 일괄 저장 핸들러 ===
-$('txtCur').onclick = () => { 
-  const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('실패', '내용 없음'); 
-  dl(`${state.prefix ? state.prefix + '-' : ''}${a.title}.txt`, a.content); 
-};
-$('txtAll').onclick = () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('실패', '내용 없음'); 
-  dl(`${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.txt`, l.map(t => `========== [ ${t.title} ] ==========\n${t.content}`).join('\n\n')); 
-};
-$('txtEach').onclick = async () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('실패', '내용 없음'); 
-  for (const t of l) { 
-    dl(`${state.prefix ? state.prefix + '-' : ''}${t.title}.txt`, t.content); 
-    await new Promise(r => setTimeout(r, 400)); 
-  } 
-};
-
-// === PDF 일괄 저장 핸들러 ===
-$('pdfCur').onclick = async () => { 
-  const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('불가', '내용 없음'); 
-  
-  $('pdfModal').classList.remove('hidden'); 
-  $('pdfModal').classList.add('flex'); 
-  $('pdfTxt').textContent = `"${a.title}" PDF 생성중`; 
-  
-  if (!state.isPreview) {
-    state.isPreview = true;
-    render();
-  }
-  
-  await new Promise(r => setTimeout(r, 400)); 
-  await genPdf(a.title, a.content, `${state.prefix ? state.prefix + '-' : ''}${a.title}.pdf`); 
-  $('pdfModal').classList.add('hidden'); 
-};
-
-$('pdfAll').onclick = async () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('불가', '내용 없음'); 
-  
-  $('pdfModal').classList.remove('hidden'); 
-  $('pdfModal').classList.add('flex'); 
-  $('pdfTxt').textContent = '통합 PDF 생성중'; 
-  
-  if (!state.isPreview) {
-    state.isPreview = true;
-    render();
-  }
-  
-  await new Promise(r => setTimeout(r, 400)); 
-  await genPdf('AI 답변 비교 통합 문서', l.map(t => `# ${t.title}\n---\n${t.content}`).join('\n\n'), `${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.pdf`); 
-  $('pdfModal').classList.add('hidden'); 
-};
-
-$('pdfEach').onclick = async () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('불가', '내용 없음'); 
-  
-  $('pdfModal').classList.remove('hidden'); 
-  $('pdfModal').classList.add('flex'); 
-  
-  if (!state.isPreview) {
-    state.isPreview = true;
-    render();
-  }
-  
-  for (let i = 0; i < l.length; i++) { 
-    $('pdfTxt').textContent = `개별 PDF 저장 중... (${i + 1}/${l.length})\n- ${l[i].title}`; 
-    await genPdf(l[i].title, l[i].content, `${state.prefix ? state.prefix + '-' : ''}${l[i].title}.pdf`); 
-    await new Promise(r => setTimeout(r, 500)); 
-  } 
-  $('pdfModal').classList.add('hidden'); 
-};
-
-// 단축키 매핑 (Ctrl + Alt + Left / Right)
-window.addEventListener('keydown', e => { 
-  if (e.ctrlKey && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { 
-    e.preventDefault(); 
-    const i = state.tabs.findIndex(t => t.id === state.activeId); 
-    if (i === -1) return; 
-    state.activeId = e.key === 'ArrowLeft' ? state.tabs[(i - 1 + state.tabs.length) % state.tabs.length].id : state.tabs[(i + 1) % state.tabs.length].id; 
-    render(); 
-  } 
-});
-
-// 진입 시 렌더링 엔진 시작
-render();
-</script>
-</body>
-</html>
+  const wordCount =
