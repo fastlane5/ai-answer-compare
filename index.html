@@ -3,24 +3,56 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- 💡 즐겨찾기 및 OneTab 노출 타이틀 강제 지정 -->
+
+<!-- 💡 1. 소셜 공유 및 OneTab 수집 봇을 위한 메타정보 강제 설정 (React 흔적 원천 박멸) -->
 <title>AI 답변 비교</title>
-
-<!-- 💡 옛날 React App의 manifest.json 캐시를 완벽히 차단하고 덮어쓰는 인라인 매니페스트 설정 -->
-<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
-
-<!-- 💡 브라우저 및 검색엔진, OneTab 수집 봇을 위한 메타정보 강제 설정 -->
+<meta name="title" content="AI 답변 비교" />
+<meta name="description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
 <meta name="application-name" content="AI 답변 비교" />
 <meta name="apple-mobile-web-app-title" content="AI 답변 비교" />
 <meta name="theme-color" content="#1e293b" />
 
-<!-- 💡 기존 리액트 파비콘(회전하는 파란 원자) 캐시를 덮어씌울 세련된 📝 이모지 파비콘 강제 지정 -->
+<!-- 💡 2. 오픈 그래프(Open Graph) 및 트위터 소셜 검색 카드 오버라이드 -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="AI 답변 비교" />
+<meta property="og:description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
+<meta property="og:site_name" content="AI 답변 비교" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="AI 답변 비교" />
+<meta name="twitter:description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
+
+<!-- 💡 3. 옛날 React App의 manifest.json 캐시를 완벽히 차단하고 덮어쓰는 인라인 매니페스트 설정 -->
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
+
+<!-- 💡 4. 세련된 📝 이모지 파비콘 강제 지정 (기존 리액트 파란 원자 아이콘 삭제) -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- 💡 5. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for(let registration of registrations) {
+        registration.unregister().then(function() {
+          console.log("구형 서비스워커 파괴 완료!");
+        });
+      }
+    });
+  }
+  if (window.caches) {
+    caches.keys().then(function(names) {
+      for (let name of names) {
+        caches.delete(name);
+        console.log("구형 cache 청소 완료!");
+      }
+    });
+  }
+</script>
+
 <style>
 .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
 .custom-scrollbar::-webkit-scrollbar-track{background:transparent}
@@ -110,8 +142,8 @@
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
-        <button id="pdfAll" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
-        <button id="pdfEach" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
+        <button id="pdfAll" class="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
+        <button id="pdfEach" class="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
       
       <!-- TXT 저장 그룹 -->
@@ -175,6 +207,9 @@
     <p id="pdfTxt" class="text-sm text-gray-600 whitespace-pre-line mt-1"></p>
   </div>
 </div>
+
+<!-- 💡 Vercel 실시간 웹 분석 스크립트 연결 -->
+<script src="/_vercel/insights/script.js"></script>
 
 <script>
 // 실시간 브라우저 타이틀 강제 재동기화 (OneTab 메모리 캐시 및 수집기 강제 제어)
