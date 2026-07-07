@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- 💡 즐겨찾기 시 노출될 웹페이지 타이틀을 "AI 답변 비교"로 명확하게 변경했습니다 -->
 <title>AI 답변 비교</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -424,13 +425,8 @@ document.addEventListener('click', e => {
     render(); 
     return; 
   }
-  if (e.target.id === 'addTab') { 
-    const id = `tab-${Date.now()}`; 
-    state.tabs.push({ id, title: '새 탭', content: '' }); 
-    state.activeId = id; 
-    state.editingId = id;
-    save(); 
-    render(); 
+  if (e.target.id === 'addTab') {
+    const id = `tab-${Date.now()}`; state.tabs.push({id,title:'새 탭',content:''}); state.activeId = id; save(); render();
   }
 });
 
