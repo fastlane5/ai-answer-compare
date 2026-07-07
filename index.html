@@ -1,28 +1,33 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI 답변 비교</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
-    .custom-scrollbar::-webkit-scrollbar-track{background:transparent}
-    .custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#94a3b8}
-    .markdown-body h1{font-size:2em;font-weight:bold;margin-bottom:.5em;border-bottom:1px solid #e5e7eb;padding-bottom:.2em}
-    .markdown-body h2{font-size:1.5em;font-weight:bold;margin-bottom:.5em;border-bottom:1px solid #e5e7eb;padding-bottom:.2em}
-    .markdown-body h3{font-size:1.25em;font-weight:bold;margin-bottom:.5em}
-    .markdown-body p{margin-bottom:1em;word-break:keep-all;overflow-wrap:break-word}
-    .markdown-body ul{list-style:disc;margin-left:1.5em;margin-bottom:1em}
-    .markdown-body ol{list-style:decimal;margin-left:1.5em;margin-bottom:1em}
-    .markdown-body blockquote{border-left:4px solid #d1d5db;padding-left:1em;color:#4b5563;margin-bottom:1em;background:#f9fafb;padding:.5em 1em}
-    .markdown-body code{background:#f3f4f6;padding:.2em .4em;border-radius:3px;font-family:monospace;color:#ef4444;font-size:.9em}
-    .markdown-body pre{background:#1f2937;color:#f9fafb;padding:1em;border-radius:8px;overflow-x:auto;margin-bottom:1em;white-space:pre-wrap}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 답변 비교</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+.custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
+.custom-scrollbar::-webkit-scrollbar-track{background:transparent}
+.custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+
+/* 웹 미리보기 마크다운 스타일 및 표(Table) 최적화 */
+.markdown-body h1{font-size:2em;font-weight:bold;margin-bottom:.5em;border-bottom:1px solid #e5e7eb;padding-bottom:.2em}
+.markdown-body h2{font-size:1.5em;font-weight:bold;margin-bottom:.5em;border-bottom:1px solid #e5e7eb;padding-bottom:.2em}
+.markdown-body h3{font-size:1.25em;font-weight:bold;margin-bottom:.5em}
+.markdown-body p{margin-bottom:1em;word-break:keep-all;overflow-wrap:break-word}
+.markdown-body ul{list-style:disc;margin-left:1.5em;margin-bottom:1em}
+.markdown-body ol{list-style:decimal;margin-left:1.5em;margin-bottom:1em}
+.markdown-body blockquote{border-left:4px solid #d1d5db;padding-left:1em;color:#4b5563;margin-bottom:1em;background:#f9fafb;padding:.5em 1em}
+.markdown-body code{background:#f3f4f6;padding:.2em .4em;border-radius:3px;font-family:monospace;color:#ef4444;font-size:.9em}
+.markdown-body pre{background:#1f2937;color:#f9fafb;padding:1em;border-radius:8px;overflow-x:auto;margin-bottom:1em;white-space:pre-wrap}
+.markdown-body table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:0.95em}
+.markdown-body th, .markdown-body td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left}
+.markdown-body th{background-color:#f3f4f6;font-weight:bold}
+</style>
 </head>
 <body class="bg-gray-800 min-h-screen flex items-center justify-center print:bg-white transition-colors duration-300">
 <div id="app" class="flex flex-col bg-gray-50 font-sans w-full h-screen overflow-hidden relative transition-all duration-500">
@@ -145,7 +150,7 @@
 
 <script>
 // 전역 설정 상수 목록
-const TAB_NAMES = ["제미나이pro","제미나이3.5","챗GPT","클로드","퍼플렉서티","그록4","META"];
+const TAB_NAMES = ["제미나이pro","제미나이3.5","챗GPT","클로드","퍼플렉서티","라마4","그록4","META"];
 const FONTS = ["sans-serif","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","serif","monospace"];
 const LINES = ["1.00","1.15","1.25","1.50","1.75","2.00","2.50","3.00"];
 
@@ -311,7 +316,7 @@ function dl(name, content) {
   URL.revokeObjectURL(u); 
 }
 
-// 🚀 백그라운드 무진동 초스피드 PDF 다이렉트 컨버터 엔진
+// 🚀 백그라운드 무진동 초스피드 PDF 다이렉트 컨버터 엔진 (페이지 중간 끊김 방지 업그레이드)
 async function genPdf(title, content, file) {
   if (!window.html2pdf || !window.marked) { 
     msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
@@ -322,9 +327,18 @@ async function genPdf(title, content, file) {
   const safePrefix = esc(state.prefix);
   const htmlContent = window.marked.parse(content || '*내용 없음*');
 
+  // PDF 전용 독립 정밀 렌더링 스타일 (페이지 잘림 방지 속성 강제 주입)
   const pdfStyle = `
     <style>
       .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
+      
+      /* 🚨 핵심: 문장블록, 목록, 표의 줄, 제목, 코드 블록이 임의로 잘리지 않도록 제어 */
+      .pdf-md p, .pdf-md li, .pdf-md blockquote, .pdf-md pre, .pdf-md tr, .pdf-md h1, .pdf-md h2, .pdf-md h3, .pdf-md figure {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        break-inside: avoid-page !important;
+      }
+      
       .pdf-md h1{font-size:2em; font-weight:bold; margin:1.5rem 0 1rem; border-bottom:3px solid #111; padding-bottom:0.4rem;}
       .pdf-md h2{font-size:1.6em; font-weight:bold; margin:1.2rem 0 0.8rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.3rem;}
       .pdf-md h3{font-size:1.3em; font-weight:bold; margin:1rem 0 0.6rem;}
@@ -334,6 +348,12 @@ async function genPdf(title, content, file) {
       .pdf-md blockquote{border-left:4px solid #d1d5db; padding:0.5rem 1rem; background:#f9fafb; margin-bottom:1rem;}
       .pdf-md pre{background:#1f2937; color:#f9fafb; padding:1rem; border-radius:8px; white-space:pre-wrap; word-break:break-all;}
       .pdf-md code{background:#f3f4f6; padding:0.2rem 0.4rem; border-radius:4px; color:#ef4444;}
+      
+      /* PDF 내부 테이블(표) 레이아웃 최적화 */
+      .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; page-break-inside: auto; }
+      .pdf-md tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+      .pdf-md th, .pdf-md td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-size: 0.9em; word-break: keep-all; }
+      .pdf-md th { background-color: #f1f5f9; font-weight: bold; }
     </style>
   `;
 
@@ -348,12 +368,14 @@ async function genPdf(title, content, file) {
     </div>
   `;
 
+  // html2pdf 정밀 변환 빌드 설정
   const opt = {
     margin: 12, 
     filename: sanitize(file),
     image: { type: 'jpeg', quality: .98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    // css 및 legacy 모드를 복합 활성화하여 page-break-inside를 완벽하게 탐지
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
