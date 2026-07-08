@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<!-- 💡 1. 소셜 공유 및 OneTab 수집 봇을 위한 메타정보 강제 설정 (React 흔적 원천 박멸) -->
 <title>AI 답변 비교</title>
 <meta name="title" content="AI 답변 비교" />
 <meta name="description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
@@ -11,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="AI 답변 비교" />
 <meta name="theme-color" content="#1e293b" />
 
+<!-- 💡 2. 오픈 그래프(Open Graph) 및 트위터 소셜 검색 카드 오버라이드 -->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="AI 답변 비교" />
 <meta property="og:description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
@@ -19,9 +21,11 @@
 <meta name="twitter:title" content="AI 답변 비교" />
 <meta name="twitter:description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
 
+<!-- 💡 3. 옛날 React App의 manifest.json 캐시를 완벽히 차단하고 덮어쓰는 인라인 매니페스트 설정 -->
 <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
+<!-- 💡 4. 대한민국 가장 인기 있는 고품격 웹폰트 8종 외부 리소스 링크 적용 -->
 <!-- 구글 웹폰트 연동 (노토산스, 나눔고딕, 나눔명조, 고운돋움, 고운바탕, 나눔손글씨펜) -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <!-- Pretendard 프리미엄 웹폰트 로드 -->
@@ -34,6 +38,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
+<!-- 💡 5. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
 <script>
   if ('serviceWorker' in navigator) {
     try {
@@ -56,11 +61,12 @@
 </script>
 
 <style>
+/* 4K 고해상도 모니터 대응 메뉴, 버튼, 아이콘 크기 동적 동기화 */
 :root {
-  --ui-font-size: 16px;
+  --ui-font-size: 16px; /* 메뉴 크기 기본값을 16px로 최적 세팅 */
 }
 
-/* 💡 프리미엄 추천 한글 폰트 4종 완전 내장 선언 (404 폰트 누수 0% 차단) */
+/* 💡 [변경 완료] 프리미엄 추천 한글 폰트 내장 선언 (메이플스토리 기존 OTF에서 가독성 뛰어난 TTF 웹팩 규격으로 업데이트) */
 @font-face {
   font-family: 'GmarketSansMedium';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
@@ -76,8 +82,8 @@
   font-display: swap;
 }
 @font-face {
-  font-family: 'MaplestoryOTFBold';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/MaplestoryOTFBold.woff') format('woff');
+  font-family: 'MaplestoryBold'; /* 💡 OTF에서 TTF 대응 빌드로 교체 완료 */
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/MaplestoryBold.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -95,6 +101,7 @@
 .custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
 .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 
+/* 4K 해상도 대응 반응형 클래스 시스템 */
 .ui-text,
 .ui-text button,
 .ui-text select,
@@ -107,11 +114,13 @@
   font-size: var(--ui-font-size, 16px) !important;
 }
 
+/* 폰트가 커짐에 따라 Lucide SVG 아이콘 크기도 미려하게 비례 동기화 */
 .ui-text svg {
   width: calc(var(--ui-font-size, 16px) + 2px) !important;
   height: calc(var(--ui-font-size, 16px) + 2px) !important;
 }
 
+/* 📝 웹 미리보기 마크다운 스타일 및 표(Table) 최적화 */
 .markdown-body {
   color: #24292f;
   font-size: 1.05em;
@@ -237,6 +246,8 @@
         <label class="text-xs font-semibold">글꼴:</label>
         <div class="flex items-center gap-1">
           <select id="fontSel" class="border rounded p-1 w-28 text-xs outline-none focus:border-blue-500"></select>
+          <!-- 💡 [신규] 실시간 글꼴 상태 표시 배지 배치 영역 -->
+          <span id="fontStatusBadge" class="hidden sm:inline-block"></span>
           <button id="addFontBtn" class="p-1.5 border rounded hover:bg-gray-100 bg-white shadow-sm" title="내 PC 글꼴/웹글꼴 직접 등록"><i data-lucide="plus" class="w-3.5 h-3.5 text-blue-600"></i></button>
           <button id="delFontBtn" class="p-1.5 border rounded hover:bg-red-50 bg-white shadow-sm hidden" title="등록된 글꼴 삭제"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i></button>
         </div>
@@ -245,6 +256,7 @@
         <label class="text-xs font-semibold whitespace-nowrap">본문 크기:</label>
         <input id="fontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none">
       </div>
+      <!-- 4K 최적화: 메뉴/버튼 UI 글자 및 아이콘 통합 크기 조절 장치 배치 -->
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold whitespace-nowrap">메뉴 크기:</label>
         <input id="uiFontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none" title="상단메뉴, 버튼, 글자수 카운터의 통합 크기를 설정합니다">
@@ -342,14 +354,13 @@
   </div>
 </div>
 
-<!-- 💡 [완벽 교체] 브라우저 기본 confirm 팝업을 완전히 대체하는 커스텀 확인 모달 대화상자 추가 -->
 <div id="confirmModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4 animate-in fade-in duration-150">
   <div class="bg-white p-6 rounded-xl w-full max-w-sm text-center shadow-2xl">
     <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="help-circle" class="w-6 h-6"></i></div>
     <h2 id="confirmT" class="font-bold mb-2 text-lg text-gray-800"></h2>
     <p id="confirmM" class="text-gray-600 mb-6 whitespace-pre-line"></p>
     <div class="flex gap-2">
-      <button id="confirmCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2.5 font-semibold text-gray-700 text-sm">취소</button>
+      <button id="confirmCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-3 font-semibold text-gray-700 text-sm">취소</button>
       <button id="confirmOk" class="w-2/3 bg-red-600 hover:bg-red-700 text-white rounded-lg py-2.5 font-semibold text-sm">확인</button>
     </div>
   </div>
@@ -363,7 +374,6 @@
   </div>
 </div>
 
-<!-- 💡 [글꼴 추가 개선] direct 폰트 파싱 로더 맞춤형 프리셋 배치 모달 -->
 <div id="fontModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4">
   <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl animate-in fade-in duration-200">
     <h2 class="font-bold mb-1 text-lg text-gray-800">나만의 글꼴 추가</h2>
@@ -373,10 +383,10 @@
     <div class="mb-4 bg-slate-50 p-3 rounded-lg border">
       <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">원클릭 명품 글꼴 추가</label>
       <div class="flex flex-wrap gap-1.5">
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="S-CoreDream-5Medium" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff">에스코어드림 5</button>
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="KOTRA_HOPE" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/KOTRA_HOPE.woff">KOTRA 희망체</button>
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="Cafe24Anemone" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/Cafe24Anemone.woff">카페24 아네모네</button>
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="TmonMonsori" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff">티몬몬소리체</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="S-CoreDream-5Medium" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff)">에스코어드림 5</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="KOTRA_HOPE" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/KOTRA_HOPE.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/KOTRA_HOPE.woff)">KOTRA 희망체</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="Cafe24Anemone" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/Cafe24Anemone.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/Cafe24Anemone.woff)">카페24 아네모네</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="TmonMonsori" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff)">티몬몬소리체</button>
       </div>
     </div>
 
@@ -387,7 +397,7 @@
       </div>
       <div>
         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">CSS 주소 또는 woff/ttf 주소</label>
-        <input id="fontUrlInput" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="https://cdn.jsdelivr.net/.../font.woff">
+        <input id="fontUrlInput" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="[https://cdn.jsdelivr.net/.../font.woff](https://cdn.jsdelivr.net/.../font.woff)">
       </div>
     </div>
     <div class="flex gap-2">
@@ -397,6 +407,7 @@
   </div>
 </div>
 
+<!-- 💡 Vercel 실시간 웹 분석 스크립트 연결 (Vercel 배포 환경에서만 안전하게 동작하도록 자동 분기 처리) -->
 <script>
   if (window.location.hostname.endsWith('vercel.app')) {
     const analyticScript = document.createElement('script');
@@ -407,16 +418,17 @@
 </script>
 
 <script>
+// 실시간 브라우저 타이틀 강제 재동기화 (OneTab 메모리 캐시 및 수집기 강제 제어)
 document.title = "AI 답변 비교";
 
-// 내장 선언된 명품 폰트 4종을 기본 글꼴 목록으로 통합 편입 완료
+// 전역 설정 상수 목록 (엄선된 최정상급 프리미엄 한글 웹폰트 8종 기본 세팅 - MaplestoryBold로 업데이트)
 const TAB_NAMES = ["제미나이pro","제미나이3.5","챗GPT","클로드","퍼플렉서티","라마4","그록4","META"];
 const STANDARD_FONTS = [
   "Pretendard", 
   "Noto Sans KR", 
   "GmarketSansMedium", 
   "KyoboHandwriting2019", 
-  "MaplestoryOTFBold", 
+  "MaplestoryBold", /* 💡 TTF 호환 규격명으로 안전 변경 */
   "CookieRun-Regular", 
   "Nanum Gothic", 
   "Nanum Myeongjo", 
@@ -446,11 +458,46 @@ const cleanUrl = url => {
   return target.trim();
 };
 
-// 💡 [핵심 엔진] CSS 링크와 바이너리 폰트(.woff, .ttf 등) 주소를 완전히 지능화 판별하여 로드하는 솔루션
+// 💡 [초정밀 폰트 상태 탐지 엔진] 사용자의 브라우저에서 특정 폰트명이 실제 렌더링 가능한지 픽셀 단위로 비교 대조 판별
+function isFontAvailable(fontName) {
+  if (!fontName) return false;
+  
+  // 브라우저 기본 내장 폰트는 검사 생략 후 즉시 성공 처리
+  if (['sans-serif', 'serif', 'monospace', 'Malgun Gothic', 'Apple SD Gothic Neo'].includes(fontName)) {
+    return true;
+  }
+
+  try {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    if (!context) return false;
+
+    const text = "abcdefghijklmnopqrstuvwxyz0123456789한글테스트";
+    context.font = "72px monospace";
+    const monoWidth = context.measureText(text).width;
+
+    context.font = "72px sans-serif";
+    const sansWidth = context.measureText(text).width;
+
+    // 대조군 테스트: 폰트가 존재하지 않으면 강제로 fallback(monospace/sans-serif)으로 그려지므로 너비가 완전히 같아짐
+    context.font = `72px "${fontName}", monospace`;
+    const testMonoWidth = context.measureText(text).width;
+
+    context.font = `72px "${fontName}", sans-serif`;
+    const testSansWidth = context.measureText(text).width;
+
+    // 만약 fallback 폰트들과 다른 너비를 가진다면 브라우저가 해당 커스텀 폰트를 고유하게 해석하여 렌더링하고 있다는 명백한 증거
+    return (testMonoWidth !== monoWidth || testSansWidth !== sansWidth);
+  } catch (e) {
+    return false;
+  }
+}
+
+// 💡 CSS 링크와 바이너리 폰트(.woff, .ttf 등) 주소를 완전히 지능화 판별하여 로드하는 솔루션
 function loadCustomFont(name, url) {
   if (!url) return;
   const clean = cleanUrl(url);
-  const isDirectFontFile = /\.(woff2?|ttf|otf)(\?.*)?$/i.test(clean);
+  const isDirectFontFile = /\.(woff2?|ttf|otf|eot)(\?.*)?$/i.test(clean);
 
   if (isDirectFontFile) {
     const styleId = `font-style-${name}`;
@@ -460,8 +507,12 @@ function loadCustomFont(name, url) {
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-    // woff2와 일반 woff 포맷 분기 처리
-    const formatType = clean.toLowerCase().includes('woff2') ? 'woff2' : 'woff';
+    // woff2, ttf 등 파일 확장자에 대응하는 포맷 유형 지능형 판별
+    let formatType = 'woff';
+    if (clean.toLowerCase().includes('woff2')) formatType = 'woff2';
+    else if (clean.toLowerCase().includes('ttf')) formatType = 'truetype';
+    else if (clean.toLowerCase().includes('otf')) formatType = 'opentype';
+
     styleEl.innerHTML = `
       @font-face {
         font-family: '${name}';
@@ -531,7 +582,7 @@ const save = () => {
   }, 400); 
 };
 
-// 💡 커스텀 모달 대화상자 전용 비동기 콜백 체계
+// 커스텀 모달 대화상자 전용 비동기 콜백 체계
 let confirmCallback = null;
 function customConfirm(title, message, onConfirm) {
   $('confirmT').textContent = title;
@@ -574,6 +625,22 @@ function render() {
 
   document.documentElement.style.setProperty('--ui-font-size', uiSizeVal + 'px');
   
+  // 💡 [핵심] 현재 선택한 글꼴이 브라우저에서 정상 작동(사용 가능)하는지 실시간 탐지하여 신호등 형태로 배지 출력
+  const activeFontName = state.settings.fontFamily;
+  const statusBadge = $('fontStatusBadge');
+  if (statusBadge) {
+    statusBadge.className = "px-1.5 py-0.5 rounded text-[10px] font-bold border whitespace-nowrap transition-all";
+    if (isFontAvailable(activeFontName)) {
+      statusBadge.textContent = "🟢 사용 가능";
+      statusBadge.className += " bg-green-50 text-green-700 border-green-200 shadow-sm";
+      statusBadge.title = "이 글꼴이 브라우저에 성공적으로 감지 및 반영되었습니다.";
+    } else {
+      statusBadge.textContent = "🔴 미지원/확인 필요";
+      statusBadge.className += " bg-red-50 text-red-700 border-red-200 shadow-sm";
+      statusBadge.title = "글꼴 파일이 깨졌거나 PC에 글꼴이 설치되지 않아 기본 글꼴로 대체 렌더링 중입니다.";
+    }
+  }
+
   if (active) {
     const charCount = active.content.replace(/\n+$/, '').length;
     const charNoSpace = active.content.replace(/\s/g, '').length;
@@ -594,10 +661,10 @@ function render() {
           <div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
             <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" />
             <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded">
-              <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </button>
             <button id="cancelRenameBtn" class="text-red-500 hover:bg-red-50 p-1 rounded">
-              <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         </div>
@@ -811,6 +878,7 @@ $('editor').addEventListener('input', e => {
   $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
 });
 
+// 💡 폰트 변경 이벤트가 발생할 때마다 렌더 함수가 실시간 폰트 감지 상태를 갱신하도록 처리
 $('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
 $('lineSel').onchange = e => { state.settings.lineSpacing = parseFloat(e.target.value); save(); render(); };
 $('fontSize').oninput = e => { state.settings.fontSize = parseInt(e.target.value) || 16; save(); render(); };
@@ -862,7 +930,9 @@ $('fontOk').onclick = () => {
   $('fontModal').classList.remove('flex');
 
   save();
-  render();
+  
+  // 💡 비동기 다운로드 및 렌더링 반영 속도를 지원하기 위해 150ms 지연 체크 후 상태 갱신
+  setTimeout(render, 150);
 };
 
 $('delFontBtn').onclick = () => {
