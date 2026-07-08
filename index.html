@@ -27,29 +27,40 @@
 <!-- 💡 4. 세련된 📝 이모지 파비콘 강제 지정 (기존 리액트 파란 원자 아이콘 삭제) -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
+<!-- 💡 5. [글꼴 혁신 1단계] 대한민국 가장 인기 있는 고품격 웹폰트 8종 사전 로드 연동 -->
+<!-- 구글 웹폰트 허브 연동 (노토산스, 나눔고딕, 나눔명조, 고운돋움, 고운바탕, 나눔손글씨펜) -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<!-- 초강력 프리미엄 Pretendard 웹폰트 즉시 로드 -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<!-- 개발자 최애 코딩 폰트 D2Coding 로드 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding.css">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
-<!-- 💡 5. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
+<!-- 💡 6. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
 <script>
   if ('serviceWorker' in navigator) {
     try {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
         for(let registration of registrations) {
-          registration.unregister().catch(function(e) { console.log(e); });
+          registration.unregister().then(function() {
+            console.log("구형 서비스워커 파괴 완료!");
+          });
         }
-      }).catch(function(e) { console.log(e); });
+      });
     } catch(e) { console.log(e); }
   }
   if (window.caches) {
     try {
       caches.keys().then(function(names) {
         for (let name of names) {
-          caches.delete(name).catch(function(e) { console.log(e); });
+          caches.delete(name);
+          console.log("구형 cache 청소 완료!");
         }
-      }).catch(function(e) { console.log(e); });
+      });
     } catch(e) { console.log(e); }
   }
 </script>
@@ -57,7 +68,7 @@
 <style>
 /* 4K 고해상도 모니터 대응 메뉴, 버튼, 아이콘 크기 동적 동기화 */
 :root {
-  --ui-font-size: 14px;
+  --ui-font-size: 16px; /* 💡 메뉴 크기 기본값을 16px로 최적 세팅 */
 }
 
 .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
@@ -75,13 +86,13 @@
 .ui-text strong,
 .ui-text a,
 .ui-text kbd {
-  font-size: var(--ui-font-size, 14px) !important;
+  font-size: var(--ui-font-size, 16px) !important;
 }
 
 /* 폰트가 커짐에 따라 Lucide SVG 아이콘 크기도 미려하게 비례 동기화 */
 .ui-text svg {
-  width: calc(var(--ui-font-size, 14px) + 2px) !important;
-  height: calc(var(--ui-font-size, 14px) + 2px) !important;
+  width: calc(var(--ui-font-size, 16px) + 2px) !important;
+  height: calc(var(--ui-font-size, 16px) + 2px) !important;
 }
 
 /* 📝 웹 미리보기 마크다운 스타일 및 표(Table) 최적화 */
@@ -90,49 +101,44 @@
   font-size: 1.05em;
   line-height: 1.75;
 }
-.markdown-body h1 {
+.markdown-body h1{
   font-size: 1.8em;
   font-weight: 800;
   margin-top: 1.5em;
   margin-bottom: 0.6em;
   border-bottom: 2px solid #e1e4e8;
   padding-bottom: 0.3em;
-  color: #1f2328;
 }
-.markdown-body h2 {
+.markdown-body h2{
   font-size: 1.4em;
   font-weight: 700;
   margin-top: 1.4em;
   margin-bottom: 0.6em;
   border-bottom: 1px solid #e1e4e8;
   padding-bottom: 0.3em;
-  color: #1f2328;
 }
-.markdown-body h3 {
-  font-size: 1.2em;
+.markdown-body h3{
+  font-size: 1.25em;
   font-weight: 700;
   margin-top: 1.2em;
   margin-bottom: 0.5em;
-  color: #1f2328;
 }
-.markdown-body p {
-  margin-top: 0;
-  margin-bottom: 1.1em;
+.markdown-body p{
+  margin-bottom: 1em;
   word-break: keep-all;
   overflow-wrap: break-word;
-  color: #24292f;
 }
-.markdown-body ul {
+.markdown-body ul{
   list-style-type: disc;
   margin-left: 1.5em;
   margin-bottom: 1em;
 }
-.markdown-body ol {
+.markdown-body ol{
   list-style-type: decimal;
   margin-left: 1.5em;
   margin-bottom: 1em;
 }
-.markdown-body li {
+.markdown-body li{
   margin-bottom: 0.4em;
 }
 
@@ -218,13 +224,18 @@
     <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 custom-scrollbar">
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold">글꼴:</label>
-        <select id="fontSel" class="border rounded p-1 w-28 text-xs outline-none focus:border-blue-500"></select>
+        <div class="flex items-center gap-1">
+          <select id="fontSel" class="border rounded p-1 w-32 text-xs outline-none focus:border-blue-500"></select>
+          <!-- 사용자 글꼴 직접 제어 도구 -->
+          <button id="addFontBtn" class="p-1.5 border rounded hover:bg-gray-100 bg-white shadow-sm" title="내 PC 글꼴/웹글꼴 직접 등록"><i data-lucide="plus" class="w-3.5 h-3.5 text-blue-600"></i></button>
+          <button id="delFontBtn" class="p-1.5 border rounded hover:bg-red-50 bg-white shadow-sm hidden" title="등록된 글꼴 삭제"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i></button>
+        </div>
       </div>
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold whitespace-nowrap">본문 크기:</label>
         <input id="fontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none">
       </div>
-      <!-- 💡 [신규] 4K 최적화: 메뉴/버튼 UI 글자 및 아이콘 통합 크기 조절 장치 배치 -->
+      <!-- 4K 최적화: 메뉴/버튼 UI 글자 및 아이콘 통합 크기 조절 장치 배치 -->
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold whitespace-nowrap">메뉴 크기:</label>
         <input id="uiFontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none" title="상단메뉴, 버튼, 글자수 카운터의 통합 크기를 설정합니다">
@@ -251,7 +262,7 @@
     <div class="flex items-center gap-1 flex-shrink-0">
       <button id="moveL" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
       <button id="moveR" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
-      <div class="w-px h-4 bg-gray-300 mx-1"></div>
+      <div class="w-px h-4 bg-gray-300 mx-1 sm:mx-2"></div>
       <button id="rename" class="flex items-center gap-1 px-2 py-1 border rounded hover:bg-gray-100 text-xs"><i data-lucide="edit-2" class="w-3 h-3"></i><span class="hidden sm:inline">이름 변경</span></button>
       <button id="delTab" class="flex items-center gap-1 px-2 py-1 border rounded text-red-500 hover:bg-red-50 text-xs"><i data-lucide="trash-2" class="w-3 h-3"></i><span class="hidden sm:inline">탭 삭제</span></button>
     </div>
@@ -260,9 +271,9 @@
       
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
-        <button id="pdfCur" class="flex items-center gap-1 px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
-        <button id="pdfAll" class="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
-        <button id="pdfEach" class="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
+        <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
+        <button id="pdfAll" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
+        <button id="pdfEach" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
       
       <!-- TXT 저장 그룹 -->
@@ -285,7 +296,7 @@
       <span id="cnt" class="font-medium"></span>
       <div class="hidden sm:block w-px h-4 bg-gray-300"></div>
       <div class="flex items-center gap-1.5">
-        <!-- 💡 [신규 스위치] 코드블록 ➡️ 인용구 자동 일괄 변환 버튼 -->
+        <!-- [스위치] 코드블록 ➡️ 인용구 자동 일괄 변환 버튼 -->
         <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
           <i data-lucide="refresh-cw" class="w-3 h-3"></i>코드 ➡️ 인용구
         </button>
@@ -331,6 +342,40 @@
   </div>
 </div>
 
+<!-- 💡 [글꼴 혁신 2단계] 직관적인 원클릭 폰트 등록 팝업 모달 추가 -->
+<div id="fontModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4">
+  <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl animate-in fade-in duration-200">
+    <h2 class="font-bold mb-1 text-lg text-gray-800">나만의 글꼴 추가</h2>
+    <p class="text-xs text-slate-500 mb-4 leading-relaxed">로컬 글꼴명을 입력하거나 아래 원클릭 추천 버튼을 클릭해 폰트를 간편히 등록하세요.</p>
+    
+    <!-- ⚡ [핵심] 원클릭 간편 프리셋 목록 -->
+    <div class="mb-4 bg-slate-50 p-3 rounded-lg border">
+      <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">원클릭 추천 한글 글꼴</label>
+      <div class="flex flex-wrap gap-1.5">
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="GmarketSansMedium" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/GmarketSans.css](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/GmarketSans.css)">지마켓 산스</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="KyoboHandwriting2019" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/KyoboHandwriting2019.css](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/KyoboHandwriting2019.css)">교보손글씨</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="MaplestoryOTFBold" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/MaplestoryOTFBold.css](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/MaplestoryOTFBold.css)">메이플스토리</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="CookieRun-Regular" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.css](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.css)">쿠키런체</button>
+      </div>
+    </div>
+
+    <div class="space-y-3 mb-5">
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">글꼴 이름 (CSS FontFamily)</label>
+        <input id="fontNameInput" class="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="예: D2Coding 또는 Pretendard">
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">웹 폰트 CSS 주소 (선택)</label>
+        <input id="fontUrlInput" class="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="[https://fonts.googleapis.com/](https://fonts.googleapis.com/)... (생략 시 로컬PC에서 조회)">
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button id="fontCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2.5 font-semibold text-gray-700 text-sm">취소</button>
+      <button id="fontOk" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold text-sm">추가하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 💡 Vercel 실시간 웹 분석 스크립트 연결 (Vercel 배포 환경에서만 안전하게 동작하도록 자동 분기 처리) -->
 <script>
   if (window.location.hostname.endsWith('vercel.app')) {
@@ -345,30 +390,48 @@
 // 실시간 브라우저 타이틀 강제 재동기화 (OneTab 메모리 캐시 및 수집기 강제 제어)
 document.title = "AI 답변 비교";
 
-// 전역 설정 상수 목록
+// 전역 설정 상수 목록 (엄선된 최정상급 프리미엄 한글 웹폰트 8종 기본 세팅)
 const TAB_NAMES = ["제미나이pro","제미나이3.5","챗GPT","클로드","퍼플렉서티","라마4","그록4","META"];
-const FONTS = ["sans-serif","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR","serif","monospace"];
+const STANDARD_FONTS = ["Pretendard", "Noto Sans KR", "Nanum Gothic", "Nanum Myeongjo", "D2Coding", "Gowun Dodum", "Gowun Batang", "Nanum Pen Script", "sans-serif", "serif", "monospace"];
 const LINES = ["1.00","1.15","1.25","1.50","1.75","2.00","2.50","3.00"];
 
 // 데이터 정제 유틸리티
 const sanitize = s => s.replace(/[\\/:*?"<>|]/g,'_').trim().slice(0,80) || 'untitled';
 const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-// 메인 상태 정보 객체 (settings에 uiFontSize 추가 및 하위 호환성 유지)
+// 메인 상태 정보 객체 (본문 크기 16, 메뉴 크기 16 동기화)
 let state = {
   prefix: localStorage.getItem('yt-script-prefix') || '',
   tabs: [],
   activeId: '',
-  settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"sans-serif","fontSize":16,"tabFontSize":14,"lineSpacing":1.5,"uiFontSize":14}'),
+  settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"Pretendard","fontSize":16,"tabFontSize":14,"lineSpacing":1.5,"uiFontSize":16,"customFonts":[]}'),
   isPreview: false, 
   isMobile: false,
   editingId: null
 };
 
-// 로컬 환경의 누락된 uiFontSize 설정 초기화
+// 동적 로컬 환경 보정
 if (!state.settings.uiFontSize) {
-  state.settings.uiFontSize = 14;
+  state.settings.uiFontSize = 16;
 }
+if (!state.settings.fontFamily || state.settings.fontFamily === 'sans-serif') {
+  state.settings.fontFamily = 'Pretendard'; // 기본 최고급 폰트로 프리텐다드 설정
+}
+if (!state.settings.customFonts) {
+  state.settings.customFonts = [];
+}
+
+// 저장되어 있던 커스텀 글꼴 동적 가공 연결
+state.settings.customFonts.forEach(font => {
+  if (font.url) {
+    try {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = font.url;
+      document.head.appendChild(link);
+    } catch(err) { console.error(err); }
+  }
+});
 
 // 로컬 데이터 수합 및 예외 백업 복구
 try {
@@ -401,16 +464,28 @@ const save = () => {
 // UI 상태 그리기 (동적 마크다운 해석 포함)
 function render() {
   const active = state.tabs.find(t => t.id === state.activeId);
-  const uiSizeVal = state.settings.uiFontSize || 14;
+  const uiSizeVal = state.settings.uiFontSize || 16;
   
+  // 기본 내장 폰트 리스트와 사용자 지정 폰트의 병합
+  const customFontNames = state.settings.customFonts.map(f => f.name);
+  const totalFonts = [...STANDARD_FONTS, ...customFontNames];
+
   // 1. 설정 셀렉트 및 폼 바인딩
-  $('fontSel').innerHTML = FONTS.map(f => `<option value="${f}" ${state.settings.fontFamily === f ? 'selected' : ''}>${f}</option>`).join('');
+  $('fontSel').innerHTML = totalFonts.map(f => `<option value="${f}" ${state.settings.fontFamily === f ? 'selected' : ''}>${f}</option>`).join('');
   $('lineSel').innerHTML = LINES.map(l => `<option value="${l}" ${String(state.settings.lineSpacing) === l ? 'selected' : ''}>${l}</option>`).join('');
   $('fontSize').value = state.settings.fontSize; 
   $('tabSize').value = state.settings.tabFontSize;
   $('uiFontSize').value = uiSizeVal;
   $('preLabel').textContent = state.prefix || '(없음)';
   
+  // 등록된 커스텀 개별 폰트 활성화 시에만 휴지통 단추 보이기
+  const isCustomSelected = state.settings.customFonts.some(f => f.name === state.settings.fontFamily);
+  if (isCustomSelected) {
+    $('delFontBtn').classList.remove('hidden');
+  } else {
+    $('delFontBtn').classList.add('hidden');
+  }
+
   // CSS 전역 변수(--ui-font-size)에 동적 매핑하여 전 지점 아이콘 및 글자 동시 스케일링
   document.documentElement.style.setProperty('--ui-font-size', uiSizeVal + 'px');
   
@@ -434,12 +509,12 @@ function render() {
       return `
         <div class="relative flex-shrink-0 group">
           <div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
-            <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32 animate-pulse" />
+            <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" />
             <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded">
-              <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </button>
             <button id="cancelRenameBtn" class="text-red-500 hover:bg-red-50 p-1 rounded">
-              <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         </div>
@@ -674,7 +749,77 @@ $('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(
 $('lineSel').onchange = e => { state.settings.lineSpacing = parseFloat(e.target.value); save(); render(); };
 $('fontSize').oninput = e => { state.settings.fontSize = parseInt(e.target.value) || 16; save(); render(); };
 $('tabSize').oninput = e => { state.settings.tabFontSize = parseInt(e.target.value) || 14; save(); render(); };
-$('uiFontSize').oninput = e => { state.settings.uiFontSize = parseInt(e.target.value) || 14; save(); render(); };
+$('uiFontSize').oninput = e => { state.settings.uiFontSize = parseInt(e.target.value) || 16; save(); render(); };
+
+// 💡 [글꼴 혁신 3단계] 글꼴 추가/삭제 및 간편 프리셋 클릭 이벤트 리스너 처리
+$('addFontBtn').onclick = () => {
+  $('fontNameInput').value = '';
+  $('fontUrlInput').value = '';
+  $('fontModal').classList.remove('hidden');
+  $('fontModal').classList.add('flex');
+  $('fontNameInput').focus();
+};
+
+$('fontCancel').onclick = () => {
+  $('fontModal').classList.add('hidden');
+  $('fontModal').classList.remove('flex');
+};
+
+// 프리셋 배지 단추 클릭 시 인풋 자동 완성
+document.querySelectorAll('.preset-font-badge').forEach(btn => {
+  btn.onclick = () => {
+    $('fontNameInput').value = btn.dataset.name;
+    $('fontUrlInput').value = btn.dataset.url;
+  };
+});
+
+$('fontOk').onclick = () => {
+  const fontName = $('fontNameInput').value.trim();
+  const fontUrl = $('fontUrlInput').value.trim();
+
+  if (!fontName) {
+    return alert('글꼴 이름을 입력해 주세요.');
+  }
+
+  // 중복 검사
+  const exists = [...STANDARD_FONTS, ...state.settings.customFonts.map(f => f.name)].includes(fontName);
+  if (exists) {
+    return alert('이미 등록되어 있는 글꼴 이름입니다.');
+  }
+
+  // 웹 폰트 URL이 있을 경우 동적으로 CSS 파일 삽입
+  if (fontUrl) {
+    try {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = fontUrl;
+      document.head.appendChild(link);
+    } catch(err) {
+      console.error('웹폰트 로드 실패', err);
+    }
+  }
+
+  // 상태 배열에 기록 및 영구 저장
+  state.settings.customFonts.push({ name: fontName, url: fontUrl });
+  state.settings.fontFamily = fontName; // 추가 후 바로 해당 폰트 적용
+  
+  $('fontModal').classList.add('hidden');
+  $('fontModal').classList.remove('flex');
+
+  save();
+  render();
+};
+
+$('delFontBtn').onclick = () => {
+  const curFont = state.settings.fontFamily;
+  if (!confirm(`등록하신 커스텀 글꼴 "${curFont}"을(를) 삭제하시겠습니까?`)) return;
+
+  state.settings.customFonts = state.settings.customFonts.filter(f => f.name !== curFont);
+  state.settings.fontFamily = "Pretendard"; // 기본 한글 명품 폰트 프리텐다드로 회귀
+
+  save();
+  render();
+};
 
 $('moveL').onclick = () => { 
   const i = state.tabs.findIndex(t => t.id === state.activeId); 
@@ -714,7 +859,7 @@ $('preCancel').onclick = () => $('preModal').classList.add('hidden');
 $('preOk').onclick = () => { state.prefix = $('preInput').value.trim(); $('preModal').classList.add('hidden'); save(); render(); };
 $('msgOk').onclick = () => $('msgModal').classList.add('hidden');
 
-// 💡 [신규 로직] 본문 내 코드 블록(```) 영역을 완벽하게 찾아 인용구(>)로 가공해주는 치트키 알고리즘
+// 💡 본문 내 코드 블록(```) 영역을 완벽하게 찾아 인용구(>)로 가공해주는 치트키 알고리즘
 $('convertCodeBlocks').onclick = () => {
   const activeTab = state.tabs.find(t => t.id === state.activeId);
   if (!activeTab || !activeTab.content.trim()) {
@@ -844,7 +989,7 @@ window.addEventListener('keydown', e => {
     e.preventDefault(); 
     const i = state.tabs.findIndex(t => t.id === state.activeId); 
     if (i === -1) return; 
-    state.activeId = e.key === 'ArrowLeft' ? state.tabs[(i - 1 + state.tabs.length) % state.tabs.length].id : state.tabs[(i + 1) % state.whitespaces % state.tabs.length].id; 
+    state.activeId = e.key === 'ArrowLeft' ? state.tabs[(i - 1 + state.tabs.length) % state.tabs.length].id : state.tabs[(i + 1) % state.tabs.length].id; 
     render(); 
   } 
 });
