@@ -35,50 +35,164 @@
 <!-- 💡 5. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      for(let registration of registrations) {
-        registration.unregister().then(function() {
-          console.log("구형 서비스워커 파괴 완료!");
-        });
-      }
-    });
+    try {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister().catch(function(e) { console.log(e); });
+        }
+      }).catch(function(e) { console.log(e); });
+    } catch(e) { console.log(e); }
   }
   if (window.caches) {
-    caches.keys().then(function(names) {
-      for (let name of names) {
-        caches.delete(name);
-        console.log("구형 cache 청소 완료!");
-      }
-    });
+    try {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          caches.delete(name).catch(function(e) { console.log(e); });
+        }
+      }).catch(function(e) { console.log(e); });
+    } catch(e) { console.log(e); }
   }
 </script>
 
 <style>
+/* 4K 고해상도 모니터 대응 메뉴, 버튼, 아이콘 크기 동적 동기화 */
+:root {
+  --ui-font-size: 14px;
+}
+
 .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
 .custom-scrollbar::-webkit-scrollbar-track{background:transparent}
 .custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}
 .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 
-/* 웹 미리보기 마크다운 스타일 및 표(Table) 최적화 */
-.markdown-body h1{font-size:2em;font-weight:bold;margin-bottom:.5em;border-bottom:1px solid #e5e7eb;padding-bottom:.2em}
-.markdown-body h2{font-size:1.5em;font-weight:bold;margin-bottom:.5em;border-bottom:1px solid #e5e7eb;padding-bottom:.2em}
-.markdown-body h3{font-size:1.25em;font-weight:bold;margin-bottom:.5em}
-.markdown-body p{margin-bottom:1em;word-break:keep-all;overflow-wrap:break-word}
-.markdown-body ul{list-style:disc;margin-left:1.5em;margin-bottom:1em}
-.markdown-body ol{list-style:decimal;margin-left:1.5em;margin-bottom:1em}
-.markdown-body blockquote{border-left:4px solid #d1d5db;padding-left:1em;color:#4b5563;margin-bottom:1em;background:#f9fafb;padding:.5em 1em}
-.markdown-body code{background:#f3f4f6;padding:.2em .4em;border-radius:3px;font-family:monospace;color:#ef4444;font-size:.9em}
-.markdown-body pre{background:#1f2937;color:#f9fafb;padding:1em;border-radius:8px;overflow-x:auto;margin-bottom:1em;white-space:pre-wrap}
-.markdown-body table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:0.95em}
-.markdown-body th, .markdown-body td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left}
-.markdown-body th{background-color:#f3f4f6;font-weight:bold}
+/* 4K 해상도 대응 반응형 클래스 시스템 */
+.ui-text,
+.ui-text button,
+.ui-text select,
+.ui-text input,
+.ui-text label,
+.ui-text span,
+.ui-text strong,
+.ui-text a,
+.ui-text kbd {
+  font-size: var(--ui-font-size, 14px) !important;
+}
+
+/* 폰트가 커짐에 따라 Lucide SVG 아이콘 크기도 미려하게 비례 동기화 */
+.ui-text svg {
+  width: calc(var(--ui-font-size, 14px) + 2px) !important;
+  height: calc(var(--ui-font-size, 14px) + 2px) !important;
+}
+
+/* 📝 웹 미리보기 마크다운 스타일 및 표(Table) 최적화 */
+.markdown-body {
+  color: #24292f;
+  font-size: 1.05em;
+  line-height: 1.75;
+}
+.markdown-body h1 {
+  font-size: 1.8em;
+  font-weight: 800;
+  margin-top: 1.5em;
+  margin-bottom: 0.6em;
+  border-bottom: 2px solid #e1e4e8;
+  padding-bottom: 0.3em;
+  color: #1f2328;
+}
+.markdown-body h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin-top: 1.4em;
+  margin-bottom: 0.6em;
+  border-bottom: 1px solid #e1e4e8;
+  padding-bottom: 0.3em;
+  color: #1f2328;
+}
+.markdown-body h3 {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  color: #1f2328;
+}
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 1.1em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  color: #24292f;
+}
+.markdown-body ul {
+  list-style-type: disc;
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+.markdown-body li {
+  margin-bottom: 0.4em;
+}
+
+/* 💡 인용구(Blockquote) 디자인 개편: 배경 연한 그레이 주입, 가독성 200% 향상 */
+.markdown-body blockquote {
+  border-left: 4px solid #3b82f6; /* 신뢰감을 주는 블루 메인 포인트 */
+  padding: 12px 18px;
+  color: #4b5563;
+  background-color: #f8fafc; /* 연한 Slate 블루그레이 배경 */
+  border-radius: 0 8px 8px 0;
+  margin: 1.2em 0;
+}
+.markdown-body blockquote p {
+  margin-bottom: 0 !important;
+  color: #374151 !important;
+  font-weight: 500;
+}
+
+/* 💡 본문 인라인 코드 디자인 개편: 붉은색 제거, 눈이 편한 고대비 가독성 코드 적용 */
+.markdown-body code {
+  background-color: #f1f5f9; /* 은은한 연회색 배경 */
+  color: #0f172a;            /* 신뢰감 있는 짙은 다크 차콜 네이비 색상 */
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9em;
+  border: 1px solid #e2e8f0;  /* 얇은 경계 테두리로 선명함 유지 */
+  font-weight: 600;
+}
+
+/* 코드 블록(Pre) 스타일 */
+.markdown-body pre {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 1.2em;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin-bottom: 1.2em;
+  white-space: pre-wrap;
+  border: 1px solid #334155;
+}
+.markdown-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.9em;
+  border-radius: 0;
+}
+
+/* 테이블 구조 최적화 */
+.markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.9em; }
+.markdown-body th, .markdown-body td { border: 1px solid #e2e8f0; padding: 10px 14px; text-align: left; }
+.markdown-body th { background-color: #f8fafc; font-weight: bold; color: #1e293b; }
 </style>
 </head>
 <body class="bg-gray-800 min-h-screen flex items-center justify-center print:bg-white transition-colors duration-300">
 <div id="app" class="flex flex-col bg-gray-50 font-sans w-full h-screen overflow-hidden relative transition-all duration-500">
   
   <!-- 1. 상단 글로벌 컨트롤 패널 -->
-  <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10 w-full">
+  <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10 w-full ui-text">
     <div class="flex items-center justify-between w-full sm:w-auto">
       <div class="flex flex-col">
         <h1 class="text-lg sm:text-xl font-bold text-gray-800">AI 답변 비교</h1>
@@ -110,6 +224,11 @@
         <label class="text-xs font-semibold whitespace-nowrap">본문 크기:</label>
         <input id="fontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none">
       </div>
+      <!-- 💡 [신규] 4K 최적화: 메뉴/버튼 UI 글자 및 아이콘 통합 크기 조절 장치 배치 -->
+      <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
+        <label class="text-xs font-semibold whitespace-nowrap">메뉴 크기:</label>
+        <input id="uiFontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none" title="상단메뉴, 버튼, 글자수 카운터의 통합 크기를 설정합니다">
+      </div>
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">줄간격:</label>
         <select id="lineSel" class="border rounded w-16 text-xs p-1 outline-none"></select>
@@ -125,14 +244,14 @@
   </div>
 
   <!-- 2. 탭 네비게이션 영역 -->
-  <div id="tabBar" class="flex overflow-x-auto bg-gray-100 border-b custom-scrollbar items-end pt-2 px-2"></div>
+  <div id="tabBar" class="flex overflow-x-auto bg-gray-100 border-b custom-scrollbar items-end pt-2 px-2 ui-text"></div>
 
   <!-- 3. 현재 탭 조작 도구 바 -->
-  <div class="bg-white border-b px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm z-10 overflow-x-auto gap-3 custom-scrollbar">
+  <div class="bg-white border-b px-2 sm:px-4 py-2 flex items-center justify-between shadow-sm z-10 overflow-x-auto gap-3 custom-scrollbar ui-text">
     <div class="flex items-center gap-1 flex-shrink-0">
       <button id="moveL" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
       <button id="moveR" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
-      <div class="w-px h-4 bg-gray-300 mx-1 sm:mx-2"></div>
+      <div class="w-px h-4 bg-gray-300 mx-1"></div>
       <button id="rename" class="flex items-center gap-1 px-2 py-1 border rounded hover:bg-gray-100 text-xs"><i data-lucide="edit-2" class="w-3 h-3"></i><span class="hidden sm:inline">이름 변경</span></button>
       <button id="delTab" class="flex items-center gap-1 px-2 py-1 border rounded text-red-500 hover:bg-red-50 text-xs"><i data-lucide="trash-2" class="w-3 h-3"></i><span class="hidden sm:inline">탭 삭제</span></button>
     </div>
@@ -141,7 +260,7 @@
       
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
-        <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
+        <button id="pdfCur" class="flex items-center gap-1 px-2 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
         <button id="pdfAll" class="flex items-center gap-1 px-2 py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
         <button id="pdfEach" class="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
@@ -156,7 +275,7 @@
   </div>
 
   <!-- 3.5. 에디터 바로 상단 상태 정보 및 삭제 도구 바 -->
-  <div class="bg-gray-100 border-b px-3 sm:px-4 py-1.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 select-none">
+  <div class="bg-gray-100 border-b px-3 sm:px-4 py-1.5 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 select-none ui-text">
     <div class="flex items-center gap-2 flex-wrap">
       <i data-lucide="save" class="w-3.5 h-3.5 text-gray-500"></i><span class="font-semibold">접두사:</span><strong id="preLabel" class="bg-white border px-2 py-0.5 rounded shadow-sm"></strong>
       <button id="setPre" class="px-2 py-0.5 bg-white hover:bg-gray-50 border rounded flex items-center gap-1"><i data-lucide="edit-2" class="w-3 h-3"></i>설정</button>
@@ -166,6 +285,10 @@
       <span id="cnt" class="font-medium"></span>
       <div class="hidden sm:block w-px h-4 bg-gray-300"></div>
       <div class="flex items-center gap-1.5">
+        <!-- 💡 [신규 스위치] 코드블록 ➡️ 인용구 자동 일괄 변환 버튼 -->
+        <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
+          <i data-lucide="refresh-cw" class="w-3 h-3"></i>코드 ➡️ 인용구
+        </button>
         <button id="clearCur" class="px-2 py-1 text-red-600 border border-red-200 rounded bg-white hover:bg-red-50 font-medium">현재 탭 비우기</button>
         <button id="clearAll" class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 font-medium shadow-sm">전체 삭제</button>
       </div>
@@ -175,7 +298,7 @@
   <!-- 4. 에디터 및 마크다운 렌더링 영역 -->
   <div class="flex-1 bg-white relative flex flex-col p-2 sm:p-4 shadow-inner overflow-hidden">
     <textarea id="editor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
-    <div id="preview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-2 markdown-body text-gray-800 hidden"></div>
+    <div id="preview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-4 md:p-6 markdown-body text-gray-800 bg-white hidden"></div>
   </div>
 </div>
 
@@ -208,8 +331,15 @@
   </div>
 </div>
 
-<!-- 💡 Vercel 실시간 웹 분석 스크립트 연결 -->
-<script src="/_vercel/insights/script.js"></script>
+<!-- 💡 Vercel 실시간 웹 분석 스크립트 연결 (Vercel 배포 환경에서만 안전하게 동작하도록 자동 분기 처리) -->
+<script>
+  if (window.location.hostname.endsWith('vercel.app')) {
+    const analyticScript = document.createElement('script');
+    analyticScript.src = "/_vercel/insights/script.js";
+    analyticScript.defer = true;
+    document.body.appendChild(analyticScript);
+  }
+</script>
 
 <script>
 // 실시간 브라우저 타이틀 강제 재동기화 (OneTab 메모리 캐시 및 수집기 강제 제어)
@@ -224,16 +354,21 @@ const LINES = ["1.00","1.15","1.25","1.50","1.75","2.00","2.50","3.00"];
 const sanitize = s => s.replace(/[\\/:*?"<>|]/g,'_').trim().slice(0,80) || 'untitled';
 const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-// 메인 상태 정보 객체
+// 메인 상태 정보 객체 (settings에 uiFontSize 추가 및 하위 호환성 유지)
 let state = {
   prefix: localStorage.getItem('yt-script-prefix') || '',
   tabs: [],
   activeId: '',
-  settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"sans-serif","fontSize":16,"tabFontSize":14,"lineSpacing":1.5}'),
+  settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"sans-serif","fontSize":16,"tabFontSize":14,"lineSpacing":1.5,"uiFontSize":14}'),
   isPreview: false, 
   isMobile: false,
   editingId: null
 };
+
+// 로컬 환경의 누락된 uiFontSize 설정 초기화
+if (!state.settings.uiFontSize) {
+  state.settings.uiFontSize = 14;
+}
 
 // 로컬 데이터 수합 및 예외 백업 복구
 try {
@@ -266,13 +401,18 @@ const save = () => {
 // UI 상태 그리기 (동적 마크다운 해석 포함)
 function render() {
   const active = state.tabs.find(t => t.id === state.activeId);
+  const uiSizeVal = state.settings.uiFontSize || 14;
   
   // 1. 설정 셀렉트 및 폼 바인딩
   $('fontSel').innerHTML = FONTS.map(f => `<option value="${f}" ${state.settings.fontFamily === f ? 'selected' : ''}>${f}</option>`).join('');
   $('lineSel').innerHTML = LINES.map(l => `<option value="${l}" ${String(state.settings.lineSpacing) === l ? 'selected' : ''}>${l}</option>`).join('');
   $('fontSize').value = state.settings.fontSize; 
   $('tabSize').value = state.settings.tabFontSize;
+  $('uiFontSize').value = uiSizeVal;
   $('preLabel').textContent = state.prefix || '(없음)';
+  
+  // CSS 전역 변수(--ui-font-size)에 동적 매핑하여 전 지점 아이콘 및 글자 동시 스케일링
+  document.documentElement.style.setProperty('--ui-font-size', uiSizeVal + 'px');
   
   // 2. 글자수 및 단어수 연산 표시
   if (active) {
@@ -294,7 +434,7 @@ function render() {
       return `
         <div class="relative flex-shrink-0 group">
           <div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
-            <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" />
+            <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32 animate-pulse" />
             <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded">
               <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </button>
@@ -359,7 +499,9 @@ function render() {
   $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 ${state.isMobile ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' : 'w-full h-screen'}`;
   
   // Lucide 아이콘 재생성 (버그 없는 동적 바인딩 보장)
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function msg(t, m) { 
@@ -367,7 +509,9 @@ function msg(t, m) {
   $('msgM').textContent = m; 
   $('msgModal').classList.remove('hidden'); 
   $('msgModal').classList.add('flex'); 
-  lucide.createIcons(); 
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 function dl(name, content) { 
@@ -393,7 +537,7 @@ async function genPdf(title, content, file) {
   const safePrefix = esc(state.prefix);
   const htmlContent = window.marked.parse(content || '*내용 없음*');
 
-  // PDF 전용 독립 정밀 렌더링 스타일 (페이지 잘림 방지 속성 강제 주입)
+  // PDF 전용 독립 정밀 렌더링 스타일 (페이지 잘림 방지 속성 강제 주입 및 마크다운 고대비 가독성 패널)
   const pdfStyle = `
     <style>
       .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
@@ -411,9 +555,33 @@ async function genPdf(title, content, file) {
       .pdf-md p{margin-bottom:1rem;}
       .pdf-md ul{list-style:disc; margin-left:1.5rem; margin-bottom:1rem;}
       .pdf-md ol{list-style:decimal; margin-left:1.5rem; margin-bottom:1rem;}
-      .pdf-md blockquote{border-left:4px solid #d1d5db; padding:0.5rem 1rem; background:#f9fafb; margin-bottom:1rem;}
+      
+      /* PDF 출력 전용 고대비 인용구 디자인 동기화 */
+      .pdf-md blockquote {
+        border-left: 4px solid #3b82f6 !important;
+        padding: 12px 18px !important;
+        background-color: #f8fafc !important;
+        border-radius: 0 8px 8px 0 !important;
+        margin: 1.2em 0 !important;
+      }
+      .pdf-md blockquote p {
+        margin-bottom: 0 !important;
+        color: #374151 !important;
+        font-weight: 500 !important;
+      }
+      
+      /* PDF 출력 전용 고대비 인라인 코드 디자인 동기화 */
+      .pdf-md code {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        padding: 2px 6px !important;
+        border-radius: 6px !important;
+        font-size: 0.9em !important;
+        border: 1px solid #e2e8f0 !important;
+        font-weight: 600 !important;
+      }
+
       .pdf-md pre{background:#1f2937; color:#f9fafb; padding:1rem; border-radius:8px; white-space:pre-wrap; word-break:break-all;}
-      .pdf-md code{background:#f3f4f6; padding:0.2rem 0.4rem; border-radius:4px; color:#ef4444;}
       
       /* PDF 내부 테이블(표) 레이아웃 최적화 */
       .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; page-break-inside: auto; }
@@ -471,11 +639,13 @@ function cancelRename() {
 document.addEventListener('click', e => {
   const b = e.target.closest('.tabBtn'); 
   if (b) { 
+    state.editingId = null; // 다른 탭 클릭 강제 이동 시 편집폼 상태 즉시 초기화
     state.activeId = b.dataset.id; 
     render(); 
     return; 
   }
   if (e.target.id === 'addTab') {
+    state.editingId = null;
     const id = `tab-${Date.now()}`; state.tabs.push({id,title:'새 탭',content:''}); state.activeId = id; save(); render();
   }
 });
@@ -499,11 +669,12 @@ $('editor').addEventListener('input', e => {
   $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
 });
 
-// 입력 제어 바인딩
+// 입력 제어 바인딩 (메뉴 크기 UI 연동 추가)
 $('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
 $('lineSel').onchange = e => { state.settings.lineSpacing = parseFloat(e.target.value); save(); render(); };
 $('fontSize').oninput = e => { state.settings.fontSize = parseInt(e.target.value) || 16; save(); render(); };
 $('tabSize').oninput = e => { state.settings.tabFontSize = parseInt(e.target.value) || 14; save(); render(); };
+$('uiFontSize').oninput = e => { state.settings.uiFontSize = parseInt(e.target.value) || 14; save(); render(); };
 
 $('moveL').onclick = () => { 
   const i = state.tabs.findIndex(t => t.id === state.activeId); 
@@ -542,6 +713,34 @@ $('setPre').onclick = () => { $('preInput').value = state.prefix; $('preModal').
 $('preCancel').onclick = () => $('preModal').classList.add('hidden');
 $('preOk').onclick = () => { state.prefix = $('preInput').value.trim(); $('preModal').classList.add('hidden'); save(); render(); };
 $('msgOk').onclick = () => $('msgModal').classList.add('hidden');
+
+// 💡 [신규 로직] 본문 내 코드 블록(```) 영역을 완벽하게 찾아 인용구(>)로 가공해주는 치트키 알고리즘
+$('convertCodeBlocks').onclick = () => {
+  const activeTab = state.tabs.find(t => t.id === state.activeId);
+  if (!activeTab || !activeTab.content.trim()) {
+    return msg('알림', '변환을 진행할 텍스트가 현재 탭에 없습니다.');
+  }
+
+  // 본문에 백틱 세 개 코드 블록이 존재하는지 확인 검사
+  const hasCodeBlock = /```[\s\S]*?```/.test(activeTab.content);
+  if (!hasCodeBlock) {
+    return msg('알림', '본문에 백틱(```)으로 묶인 코드 블록 영역이 감지되지 않았습니다.');
+  }
+
+  // 코드 블록 변환 정규식 연산 처리
+  // ```[언어스킨]\n [코드내용] \n``` 구조를 매핑해냄
+  const convertedText = activeTab.content.replace(/```[a-zA-Z0-9-]*\r?\n([\s\S]*?)```/g, (match, codeContent) => {
+    // 내부 문장 줄바꿈별 분리 처리 후 접두사 "> "를 입혀 결합
+    const lines = codeContent.split(/\r?\n/);
+    return lines.map(line => `> ${line}`).join('\n');
+  });
+
+  // 상태값 동기화 및 즉각 보관 처리
+  state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: convertedText } : t);
+  save();
+  render();
+  msg('변환 완료', '본문 안의 코드 블록을 독자들이 읽기 편한 인용구 서식(>)으로 일괄 자동 변환했습니다!');
+};
 
 $('clearCur').onclick = () => { 
   const a = state.tabs.find(t => t.id === state.activeId); 
@@ -645,7 +844,7 @@ window.addEventListener('keydown', e => {
     e.preventDefault(); 
     const i = state.tabs.findIndex(t => t.id === state.activeId); 
     if (i === -1) return; 
-    state.activeId = e.key === 'ArrowLeft' ? state.tabs[(i - 1 + state.tabs.length) % state.tabs.length].id : state.tabs[(i + 1) % state.tabs.length].id; 
+    state.activeId = e.key === 'ArrowLeft' ? state.tabs[(i - 1 + state.tabs.length) % state.tabs.length].id : state.tabs[(i + 1) % state.whitespaces % state.tabs.length].id; 
     render(); 
   } 
 });
