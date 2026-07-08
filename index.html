@@ -139,7 +139,7 @@
   margin-bottom: 0.4em;
 }
 
-/* 💡 인용구(Blockquote) 디자인 개편: 배경 연한 그레이 주입, 가독성 200% 향상 */
+/* 인용구(Blockquote) 디자인 개편: 배경 연한 그레이 주입, 가독성 200% 향상 */
 .markdown-body blockquote {
   border-left: 4px solid #3b82f6; /* 신뢰감을 주는 블루 메인 포인트 */
   padding: 12px 18px;
@@ -154,7 +154,7 @@
   font-weight: 500;
 }
 
-/* 💡 본문 인라인 코드 디자인 개편: 붉은색 제거, 눈이 편한 고대비 가독성 코드 적용 */
+/* 본문 인라인 코드 디자인 개편: 붉은색 제거, 눈이 편한 고대비 가독성 코드 적용 */
 .markdown-body code {
   background-color: #f1f5f9; /* 은은한 연회색 배경 */
   color: #0f172a;            /* 신뢰감 있는 짙은 다크 차콜 네이비 색상 */
@@ -222,10 +222,10 @@
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold">글꼴:</label>
         <div class="flex items-center gap-1">
-          <select id="fontSel" class="border rounded p-1 w-32 text-xs outline-none focus:border-blue-500"></select>
+          <select id="fontSel" class="border rounded p-1 w-28 text-xs outline-none focus:border-blue-500"></select>
           <!-- 사용자 글꼴 직접 제어 도구 -->
           <button id="addFontBtn" class="p-1.5 border rounded hover:bg-gray-100 bg-white shadow-sm" title="내 PC 글꼴/웹글꼴 직접 등록"><i data-lucide="plus" class="w-3.5 h-3.5 text-blue-600"></i></button>
-          <button id="delFontBtn" class="p-1.5 border rounded hover:bg-red-50 bg-white shadow-sm hidden" title="등록된 글꼴 삭제"><i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i></button>
+          <button id="delFontBtn" class="p-1.5 border rounded hover:bg-red-50 bg-white shadow-sm hidden" title="등록된 글꼴 삭제"><i data-lucide="trash-2" class="w-3 h-3 text-red-500"></i></button>
         </div>
       </div>
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
@@ -259,7 +259,7 @@
     <div class="flex items-center gap-1 flex-shrink-0">
       <button id="moveL" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></button>
       <button id="moveR" class="p-1.5 border rounded hover:bg-gray-100"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></button>
-      <div class="w-px h-4 bg-gray-300 mx-1 sm:mx-2"></div>
+      <div class="w-px h-4 bg-gray-300 mx-1"></div>
       <button id="rename" class="flex items-center gap-1 px-2 py-1 border rounded hover:bg-gray-100 text-xs"><i data-lucide="edit-2" class="w-3 h-3"></i><span class="hidden sm:inline">이름 변경</span></button>
       <button id="delTab" class="flex items-center gap-1 px-2 py-1 border rounded text-red-500 hover:bg-red-50 text-xs"><i data-lucide="trash-2" class="w-3 h-3"></i><span class="hidden sm:inline">탭 삭제</span></button>
     </div>
@@ -396,43 +396,46 @@ const LINES = ["1.00","1.15","1.25","1.50","1.75","2.00","2.50","3.00"];
 const sanitize = s => s.replace(/[\\/:*?"<>|]/g,'_').trim().slice(0,80) || 'untitled';
 const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
+// 💡 [핵심] 주소에 숨겨져 있는 마크다운 불순물을 제거하는 강력한 자가정화 알고리즘
+const cleanUrl = url => {
+  if (!url) return '';
+  let target = url.trim();
+  if (target.includes('](')) {
+    const matches = target.match(/\((https?:\/\/[^\)]+)\)/i);
+    if (matches && matches[1]) {
+      return matches[1].trim();
+    }
+  }
+  target = target.replace(/[\[\]\(\)]/g, '');
+  return target.trim();
+};
+
 // 메인 상태 정보 객체 (본문 크기 16, 메뉴 크기 16 동기화)
 let state = {
   prefix: localStorage.getItem('yt-script-prefix') || '',
   tabs: [],
   activeId: '',
-  settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"Pretendard","fontSize":16,"tabFontSize":14,"lineSpacing":1.5,"uiFontSize":16,"customFonts":[]}'),
-  isPreview: false, 
-  isMobile: false,
-  editingId: null
+  settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"Pretendard","fontSize":16,"tabFontSize":14,"lineSpacing":1.5,"uiFontSize":16,"customFonts":[]}')
 };
 
 // 동적 로컬 환경 보정
-if (!state.settings.uiFontSize) {
-  state.settings.uiFontSize = 16;
-}
-if (!state.settings.fontFamily || state.settings.fontFamily === 'sans-serif') {
-  state.settings.fontFamily = 'Pretendard'; // 기본 최고급 폰트로 프리텐다드 설정
-}
-if (!state.settings.customFonts) {
-  state.settings.customFonts = [];
-}
+if (!state.settings.uiFontSize) state.settings.uiFontSize = 16;
+if (!state.settings.fontFamily || state.settings.fontFamily === 'sans-serif') state.settings.fontFamily = 'Pretendard';
+if (!state.settings.customFonts) state.settings.customFonts = [];
 
-// 💡 [초강력 복구 로직] 저장되어 있던 커스텀 글꼴을 안전하게 정화하여 헤더에 자동 로드
+// 💡 [데이터 수집 단계에서 자가 정화 활성화]
+state.settings.customFonts = state.settings.customFonts.map(f => ({
+  name: f.name,
+  url: cleanUrl(f.url)
+}));
+
+// 💡 저장되어 있던 커스텀 글꼴을 안전하게 빌드하여 헤더에 자동 로드
 state.settings.customFonts.forEach(font => {
   if (font.url) {
     try {
-      // 혹시라도 예전 버그로 인해 마크다운 링크 양식([링크](링크))이 메모리에 들어있다면 자동 정화
-      let cleanUrl = font.url.trim();
-      if (cleanUrl.includes('](')) {
-        const match = cleanUrl.match(/\(([^)]+)\)/);
-        if (match && match[1]) {
-          cleanUrl = match[1].trim();
-        }
-      }
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = cleanUrl;
+      link.href = font.url;
       document.head.appendChild(link);
     } catch(err) { console.error(err); }
   }
@@ -548,7 +551,7 @@ function render() {
     }
   }
 
-  // 4. 에디터 및 미리보기 폰트 속성 완벽 동기화 적용 (선택된 글꼴 명칭을 정확히 인라인 스타일에 부여)
+  // 4. 에디터 및 미리보기 폰트 속성 완벽 동기화 적용
   const ed = $('editor'), pv = $('preview');
   if (active) {
     ed.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`; 
@@ -774,13 +777,14 @@ $('fontCancel').onclick = () => {
 document.querySelectorAll('.preset-font-badge').forEach(btn => {
   btn.onclick = () => {
     $('fontNameInput').value = btn.dataset.name;
-    $('fontUrlInput').value = btn.dataset.url;
+    // 💡 [선제 조치] 프리셋 데이터 자체에 오타가 생겨도 안전하게 정화하여 주입
+    $('fontUrlInput').value = cleanUrl(btn.dataset.url);
   };
 });
 
 $('fontOk').onclick = () => {
   const fontName = $('fontNameInput').value.trim();
-  let fontUrl = $('fontUrlInput').value.trim();
+  let fontUrl = cleanUrl($('fontUrlInput').value.trim()); // 💡 등록 버튼 누를 때 즉각 자가정화
 
   if (!fontName) {
     return alert('글꼴 이름을 입력해 주세요.');
@@ -790,14 +794,6 @@ $('fontOk').onclick = () => {
   const exists = [...STANDARD_FONTS, ...state.settings.customFonts.map(f => f.name)].includes(fontName);
   if (exists) {
     return alert('이미 등록되어 있는 글꼴 이름입니다.');
-  }
-
-  // 💡 [초강력 자가 정화 코드] 마크다운 양식이 주소에 포함된 경우 순수 URL만 자동 추출
-  if (fontUrl.includes('](')) {
-    const match = fontUrl.match(/\(([^)]+)\)/);
-    if (match && match[1]) {
-      fontUrl = match[1].trim();
-    }
   }
 
   // 웹 폰트 URL이 있을 경우 동적으로 CSS 파일 삽입
