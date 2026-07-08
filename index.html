@@ -27,12 +27,20 @@
 <!-- 💡 4. 세련된 📝 이모지 파비콘 강제 지정 (기존 리액트 파란 원자 아이콘 삭제) -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
+<!-- 💡 5. [필수 복구] 대한민국 가장 인기 있는 고품격 웹폰트 8종 외부 리소스 링크 완전 적용 -->
+<!-- 구글 웹폰트 연동 (노토산스, 나눔고딕, 나눔명조, 고운돋움, 고운바탕, 나눔손글씨펜) -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<!-- 초강력 프리미엄 Pretendard 웹폰트 즉시 로드 -->
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<!-- 개발자 최애 코딩 폰트 D2Coding 로드 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding.css">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
-<!-- 💡 5. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
+<!-- 💡 6. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 (접속 시 자동 즉시 청소) -->
 <script>
   if ('serviceWorker' in navigator) {
     try {
@@ -57,7 +65,7 @@
 <style>
 /* 4K 고해상도 모니터 대응 메뉴, 버튼, 아이콘 크기 동적 동기화 */
 :root {
-  --ui-font-size: 16px; /* 💡 메뉴 크기 기본값을 16px로 최적 세팅 */
+  --ui-font-size: 16px; /* 메뉴 크기 기본값을 16px로 최적 세팅 */
 }
 
 .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
@@ -369,7 +377,7 @@
 <script>
   if (window.location.hostname.endsWith('vercel.app')) {
     const analyticScript = document.createElement('script');
-    analyticScript.src = "//_vercel/insights/script.js";
+    analyticScript.src = "/_vercel/insights/script.js";
     analyticScript.defer = true;
     document.body.appendChild(analyticScript);
   }
@@ -540,7 +548,7 @@ function render() {
     }
   }
 
-  // 4. 에디터 및 미리보기 폰트 속성 완벽 동기화 적용
+  // 4. 에디터 및 미리보기 폰트 속성 완벽 동기화 적용 (선택된 글꼴 명칭을 정확히 인라인 스타일에 부여)
   const ed = $('editor'), pv = $('preview');
   if (active) {
     ed.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`; 
@@ -710,7 +718,7 @@ function cancelRename() {
 // === 이벤트 핸들러 ===
 document.addEventListener('click', e => {
   const b = e.target.closest('.tabBtn'); 
-  if (b) { 
+  if (b) {
     state.editingId = null; // 다른 탭 클릭 강제 이동 시 편집폼 상태 즉시 초기화
     state.activeId = b.dataset.id; 
     render(); 
@@ -741,7 +749,7 @@ $('editor').addEventListener('input', e => {
   $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
 });
 
-// 입력 제어 바인딩 (메뉴 크기 UI 연동 추가)
+// 입력 제어 바인딩 (메뉴 크기 UI 및 폰트 변경 연동 정밀 매핑)
 $('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
 $('lineSel').onchange = e => { state.settings.lineSpacing = parseFloat(e.target.value); save(); render(); };
 $('fontSize').oninput = e => { state.settings.fontSize = parseInt(e.target.value) || 16; save(); render(); };
