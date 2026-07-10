@@ -608,15 +608,15 @@ async function genPdf(title, tabsData, file) {
     margin: 12, 
     filename: sanitize(file),
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, useCORS: true, logging: false }, // 화질/용량 최적화 (29장 이상 PDF 렌더링 성공 보장)
+    html2canvas: { scale: 1.5, useCORS: true, logging: false }, 
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
   try {
     let worker = html2pdf().set(opt);
-    
-    // 전체 문서를 한 번에 그리지 않고, 탭 단위로 캔버스를 분할 생성하여 메모리 초과 방지
+    const wrappers = []; // 💡 [핵심] 렌더링 도중 요소가 사라지는 것을 막기 위한 안전 보관소
+
     for (let i = 0; i < tabsData.length; i++) {
       const tab = tabsData[i];
       const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
@@ -639,23 +639,28 @@ async function genPdf(title, tabsData, file) {
 
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute'; 
-      wrapper.style.left = '-9999px'; 
+      // 💡 [핵심] 화면 밖(-9999px)으로 던지면 최신 브라우저가 최적화로 지워버릴 수 있어 z-index로 겹쳐서 숨김
+      wrapper.style.left = '0'; 
       wrapper.style.top = '0';
-      wrapper.style.width = '800px'; // 모바일 화면에서 버튼 클릭 시 글씨 찌그러짐 원천 차단
+      wrapper.style.zIndex = '-9999';
+      wrapper.style.width = '800px'; 
+      wrapper.style.backgroundColor = 'white'; // 투명 방지
       wrapper.innerHTML = htmlString;
       document.body.appendChild(wrapper);
+      wrappers.push(wrapper);
 
       if (i === 0) {
         worker = worker.from(wrapper).toPdf();
       } else {
         worker = worker.get('pdf').then(pdf => { pdf.addPage(); }).from(wrapper).toContainer().toCanvas().toPdf();
       }
-
-      // 비동기 렌더링이 완전히 완료된 후 안전하게 DOM 삭제 처리
-      worker = worker.then(() => { wrapper.remove(); });
     }
 
     await worker.save();
+    
+    // 💡 [핵심] 모든 PDF 저장이 완벽하게 완료된 후 일괄 삭제 (비동기 중간에 사라지는 현상 원천 차단)
+    wrappers.forEach(w => w.remove());
+
   } catch (err) {
     console.error(err);
     msg('오류', 'PDF 파일 빌드 중 에러가 발생했습니다. 브라우저 메모리가 부족할 수 있습니다.');
@@ -797,7 +802,6 @@ $('txtEach').onclick = async () => {
   for (const t of l) { dl(`${state.prefix ? state.prefix + '-' : ''}${t.title}.txt`, t.content); await new Promise(r => setTimeout(r, 400)); } 
 };
 
-// 💡 [변경 완료] PDF 변환 버튼들이 이제 새로 업그레이드된 분할 렌더링 배열(Array) 엔진을 호출합니다.
 $('pdfCur').onclick = async () => { 
   const a = state.tabs.find(t => t.id === state.activeId); 
   if (!a?.content.trim()) return msg('불가', '내용 없음'); 
