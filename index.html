@@ -25,12 +25,9 @@
 <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
-<!-- 💡 4. 대한민국 가장 인기 있는 고품격 웹폰트 8종 외부 리소스 링크 적용 -->
-<!-- 구글 웹폰트 연동 -->
+<!-- 💡 4. 대한민국 가장 인기 있는 고품격 웹폰트 외부 리소스 링크 적용 -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<!-- Pretendard 프리미엄 웹폰트 로드 -->
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-<!-- 개발자 최애 코딩 폰트 D2Coding 로드 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding.css">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -70,30 +67,22 @@
 @font-face {
   font-family: 'GmarketSansMedium';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+  font-weight: normal; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'KyoboHandwriting2019';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@1.0/KyoboHandwriting2019.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+  font-weight: normal; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'MaplestoryBold';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/MaplestoryBold.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+  font-weight: normal; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'CookieRun-Regular';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+  font-weight: normal; font-style: normal; font-display: swap;
 }
 
 .custom-scrollbar::-webkit-scrollbar{width:6px;height:6px}
@@ -608,14 +597,15 @@ async function genPdf(title, tabsData, file) {
     margin: 12, 
     filename: sanitize(file),
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, useCORS: true, logging: false }, 
+    // 💡 스크롤 관련 버그 해결: 무조건 맨 위쪽을 기준으로 렌더링되도록 스크롤Y를 0으로 고정
+    html2canvas: { scale: 1.5, useCORS: true, logging: false, scrollY: 0 }, 
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
   try {
     let worker = html2pdf().set(opt);
-    const wrappers = []; // 💡 [핵심] 렌더링 도중 요소가 사라지는 것을 막기 위한 안전 보관소
+    const wrappers = []; 
 
     for (let i = 0; i < tabsData.length; i++) {
       const tab = tabsData[i];
@@ -639,26 +629,32 @@ async function genPdf(title, tabsData, file) {
 
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute'; 
-      // 💡 [핵심] 화면 밖(-9999px)으로 던지면 최신 브라우저가 최적화로 지워버릴 수 있어 z-index로 겹쳐서 숨김
-      wrapper.style.left = '0'; 
+      wrapper.style.left = '-9999px'; 
       wrapper.style.top = '0';
-      wrapper.style.zIndex = '-9999';
       wrapper.style.width = '800px'; 
-      wrapper.style.backgroundColor = 'white'; // 투명 방지
+      wrapper.style.backgroundColor = 'white'; 
       wrapper.innerHTML = htmlString;
       document.body.appendChild(wrapper);
       wrappers.push(wrapper);
 
+      // 💡 [핵심] await를 통해 이전 작업(html2canvas 캡처 등)이 100% 끝날 때까지 대기
+      // 이것 없이 동기 루프를 돌리면 .from()이 먼저 덮어씌워져서 빈 백지가 나옵니다.
       if (i === 0) {
-        worker = worker.from(wrapper).toPdf();
+        await worker.from(wrapper).toPdf();
       } else {
-        worker = worker.get('pdf').then(pdf => { pdf.addPage(); }).from(wrapper).toContainer().toCanvas().toPdf();
+        await worker.get('pdf').then(pdf => { pdf.addPage(); }).from(wrapper).toContainer().toCanvas().toPdf();
       }
+
+      // 비동기 큐 작업이 완료될 때까지 확실한 대기 지연장치 설정
+      await new Promise(resolve => {
+        worker.then(() => resolve());
+      });
     }
 
+    // 💡 모든 그리기와 인쇄 명령이 끝난 뒤에 비로소 저장
     await worker.save();
     
-    // 💡 [핵심] 모든 PDF 저장이 완벽하게 완료된 후 일괄 삭제 (비동기 중간에 사라지는 현상 원천 차단)
+    // 저장이 전부 완료된 안전한 타이밍에만 가상 도화지 일괄 철거
     wrappers.forEach(w => w.remove());
 
   } catch (err) {
