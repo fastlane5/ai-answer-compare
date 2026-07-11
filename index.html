@@ -107,8 +107,8 @@
   height: calc(var(--ui-font-size, 16px) + 2px) !important;
 }
 
-/* 📝 웹 미리보기 마크다운 스타일 */
-.markdown-body { color: #24292f; font-size: 1.05em; line-height: 1.75; }
+/* 📝 웹 미리보기 마크다운 스타일 (동적 크기 적용 위해 font-size 고정값 해제) */
+.markdown-body { color: #24292f; line-height: 1.75; }
 .markdown-body h1{ font-size: 1.8em; font-weight: 800; margin-top: 1.5em; margin-bottom: 0.6em; border-bottom: 2px solid #e1e4e8; padding-bottom: 0.3em; }
 .markdown-body h2{ font-size: 1.4em; font-weight: 700; margin-top: 1.4em; margin-bottom: 0.6em; border-bottom: 1px solid #e1e4e8; padding-bottom: 0.3em; }
 .markdown-body h3{ font-size: 1.25em; font-weight: 700; margin-top: 1.2em; margin-bottom: 0.5em; }
@@ -156,7 +156,7 @@
         </div>
       </div>
       
-      <!-- 💡 [신규 추가] 프로젝트 단위 백업 및 복구 버튼 -->
+      <!-- 프로젝트 단위 백업 및 복구 버튼 -->
       <div class="flex items-center gap-1.5 ml-auto sm:ml-4 pl-2 sm:border-l border-gray-200">
         <button id="saveProjectBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg border border-teal-200 text-xs font-bold transition shadow-sm" title="작업 중인 프로젝트 전체를 파일로 백업">
           <i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">백업</span>
@@ -192,12 +192,12 @@
         <input id="uiFontSize" type="number" min="10" max="40" class="border rounded w-14 text-center text-xs p-1 outline-none" title="상단메뉴, 버튼, 글자수 카운터의 통합 크기를 설정합니다">
       </div>
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
-        <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">줄간격:</label>
-        <select id="lineSel" class="border rounded w-16 text-xs p-1 outline-none"></select>
+        <label class="text-xs font-semibold">탭 크기:</label>
+        <input id="tabSize" type="number" min="10" max="24" class="border rounded w-14 text-center text-xs p-1 outline-none" title="탭 목록의 글자 크기를 독립적으로 조절합니다">
       </div>
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
-        <label class="text-xs font-semibold">탭 크기:</label>
-        <input id="tabSize" type="number" min="10" max="24" class="border rounded w-14 text-center text-xs p-1 outline-none">
+        <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">줄간격:</label>
+        <select id="lineSel" class="border rounded w-16 text-xs p-1 outline-none"></select>
       </div>
     </div>
     <div class="hidden sm:block flex-1 text-right text-xs text-gray-400">
@@ -452,6 +452,7 @@ let state = {
 };
 
 if (!state.settings.uiFontSize) state.settings.uiFontSize = 16;
+if (!state.settings.tabFontSize) state.settings.tabFontSize = 14;
 if (!state.settings.fontFamily || state.settings.fontFamily === 'sans-serif') state.settings.fontFamily = 'Pretendard';
 if (!state.settings.customFonts) state.settings.customFonts = [];
 
@@ -504,6 +505,19 @@ function customConfirm(title, message, onConfirm) {
 $('confirmCancel').onclick = () => { $('confirmModal').classList.add('hidden'); confirmCallback = null; };
 $('confirmOk').onclick = () => { $('confirmModal').classList.add('hidden'); if (confirmCallback) confirmCallback(); confirmCallback = null; };
 
+window.finishRename = id => {
+  const input = $('renameInput');
+  if (input) {
+    const newTitle = input.value.trim();
+    if (newTitle) {
+      const tab = state.tabs.find(t => t.id === id);
+      if (tab) tab.title = newTitle;
+    }
+  }
+  state.editingId = null;
+  save(); render();
+};
+
 function render() {
   const active = state.tabs.find(t => t.id === state.activeId);
   const uiSizeVal = state.settings.uiFontSize || 16;
@@ -554,13 +568,14 @@ function render() {
     const isA = t.id === state.activeId;
     if (state.editingId === t.id) {
       return `<div class="relative flex-shrink-0 group"><div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
-        <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" />
+        <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none w-24 sm:w-32" style="font-size: ${state.settings.tabFontSize}px;" />
         <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded" onclick="finishRename('${t.id}')">
           <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </button>
       </div></div>`;
     }
-    return `<div class="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap transition-all border-t border-l border-r mx-0.5 mt-1 rounded-t-lg select-none flex items-center gap-1.5 ${isA ? 'bg-white border-gray-200 font-bold text-blue-600 shadow-sm z-10 relative border-b-white transform translate-y-[1px]' : 'bg-gray-100/50 text-gray-500 border-transparent hover:bg-gray-200'}" onclick="selectTab('${t.id}')">
+    // 💡 핵심: 탭 항목에 style 속성으로 독립적인 글자 크기 주입
+    return `<div class="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap transition-all border-t border-l border-r mx-0.5 mt-1 rounded-t-lg select-none flex items-center gap-1.5 ${isA ? 'bg-white border-gray-200 font-bold text-blue-600 shadow-sm z-10 relative border-b-white transform translate-y-[1px]' : 'bg-gray-100/50 text-gray-500 border-transparent hover:bg-gray-200'}" onclick="selectTab('${t.id}')" style="font-size: ${state.settings.tabFontSize}px;">
         ${esc(t.title)}
         ${isA ? '<div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_4px_rgba(59,130,246,0.6)]"></div>' : ''}
     </div>`;
@@ -579,10 +594,16 @@ function render() {
 
   if (active) {
     if (document.activeElement !== $('editor')) $('editor').value = active.content;
+    
+    // 에디터 적용
     $('editor').style.fontFamily = state.settings.fontFamily;
     $('editor').style.fontSize = state.settings.fontSize + 'px';
     $('editor').style.lineHeight = state.settings.lineSpacing;
+    
+    // 💡 핵심: 웹 미리보기에도 에디터와 동일하게 폰트, 크기, 줄간격 완벽 동기화
     $('preview').style.fontFamily = state.settings.fontFamily;
+    $('preview').style.fontSize = state.settings.fontSize + 'px';
+    $('preview').style.lineHeight = state.settings.lineSpacing;
 
     try {
       $('preview').innerHTML = marked.parse(active.content || '작성된 내용이 없습니다.');
@@ -594,7 +615,7 @@ function render() {
     $('preview').innerHTML = '';
   }
 
-  // 비교 모드 렌더링 로직
+  // 💡 비교 모드 렌더링 로직 (오른쪽 패널 활성화)
   if (state.isCompareMode) {
     $('rightPane').classList.remove('hidden');
     $('rightPane').classList.add('flex');
@@ -609,10 +630,15 @@ function render() {
     const compTab = state.tabs.find(t => t.id === state.compareId);
     if (compTab) {
       if (document.activeElement !== $('compareEditor')) $('compareEditor').value = compTab.content;
+      
       $('compareEditor').style.fontFamily = state.settings.fontFamily;
       $('compareEditor').style.fontSize = state.settings.fontSize + 'px';
       $('compareEditor').style.lineHeight = state.settings.lineSpacing;
+      
+      // 웹 미리보기에도 동기화
       $('comparePreview').style.fontFamily = state.settings.fontFamily;
+      $('comparePreview').style.fontSize = state.settings.fontSize + 'px';
+      $('comparePreview').style.lineHeight = state.settings.lineSpacing;
 
       try {
         $('comparePreview').innerHTML = marked.parse(compTab.content || '작성된 내용이 없습니다.');
@@ -636,6 +662,7 @@ function updatePreviewBtn() {
   if (state.isPreview) {
     btn.innerHTML = `<i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 에디터로 돌아가기`;
     btn.className = "flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border bg-blue-600 text-white border-blue-700 hover:bg-blue-700 shadow-sm transition";
+    
     $('editor').classList.add('hidden');
     $('preview').classList.remove('hidden');
     if($('compareEditor')) $('compareEditor').classList.add('hidden');
@@ -643,6 +670,7 @@ function updatePreviewBtn() {
   } else {
     btn.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5"></i> 웹 미리보기 모드`;
     btn.className = "flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border bg-white text-gray-700 border-gray-300 hover:bg-gray-50 shadow-sm transition";
+    
     $('editor').classList.remove('hidden');
     $('preview').classList.add('hidden');
     if($('compareEditor')) $('compareEditor').classList.remove('hidden');
@@ -657,18 +685,6 @@ window.addTab = () => {
   state.tabs.push({ id, title: `새 탭 ${state.tabs.length + 1}`, content: '' }); 
   state.activeId = id; save(); render(); 
 };
-window.finishRename = id => {
-  const input = $('renameInput');
-  if (input) {
-    const newTitle = input.value.trim();
-    if (newTitle) {
-      const tab = state.tabs.find(t => t.id === id);
-      if (tab) tab.title = newTitle;
-    }
-  }
-  state.editingId = null;
-  save(); render();
-};
 
 $('rename').onclick = () => {
   if (state.activeId) { state.editingId = state.activeId; render(); }
@@ -680,6 +696,12 @@ $('delTab').onclick = () => {
     const idx = state.tabs.findIndex(t => t.id === state.activeId);
     state.tabs.splice(idx, 1);
     state.activeId = state.tabs[Math.min(idx, state.tabs.length - 1)].id;
+    
+    // 만약 삭제한 탭이 비교모드 우측 탭이었다면 비교 대상을 다른 것으로 재설정
+    if (state.compareId === state.activeId) {
+      const otherTab = state.tabs.find(t => t.id !== state.activeId);
+      state.compareId = otherTab ? otherTab.id : state.activeId;
+    }
     save(); render();
   });
 };
@@ -704,7 +726,7 @@ $('editor').oninput = e => {
   if (active) { active.content = e.target.value; save(); render(); }
 };
 
-// 비교 모드 관련 이벤트
+// 💡 비교 모드 관련 이벤트 바인딩
 $('compareBtn').onclick = () => {
   state.isCompareMode = !state.isCompareMode;
   if (state.isCompareMode && !state.compareId) {
