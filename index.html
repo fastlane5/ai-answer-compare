@@ -250,6 +250,7 @@
         <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>코드 ➡️ 인용구
         </button>
+        
         <!-- 맞춤법 교정 버튼 그룹 -->
         <div class="flex rounded shadow-sm">
           <button id="spellCheckBtn" class="px-2 py-1 text-emerald-600 border border-emerald-200 rounded-l bg-white hover:bg-emerald-50 font-medium flex items-center gap-1" title="AI를 활용하여 현재 탭의 맞춤법과 띄어쓰기를 교정합니다">
@@ -285,7 +286,7 @@
   </div>
 </div>
 
-<!-- 💡 구글 API 키 설정 모달 -->
+<!-- 구글 API 키 설정 모달 -->
 <div id="apiKeyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4">
   <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl animate-in fade-in duration-200">
     <h2 class="font-bold mb-2 text-lg text-gray-800">🔑 구글 Gemini API 키 설정</h2>
@@ -547,7 +548,7 @@ function render() {
     const charNoSpace = active.content.replace(/\s/g, '').length;
     const wordCount = active.content.trim() ? active.content.trim().split(/\s+/).length : 0;
     $('expName').textContent = `👉 예상 파일명: ${state.prefix ? sanitize(state.prefix) + '-' : ''}${sanitize(active.title)}.txt`;
-    $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
+    $('cnt').innerHTML = `글자수: <strong class="text-blue-600">{charCount}</strong> <span class="text-gray-400">({charNoSpace})</span> | 단어수: <strong class="text-indigo-600">{wordCount}</strong>`;
   } else {
     $('expName').textContent = ''; $('cnt').innerHTML = '';
   }
@@ -592,7 +593,7 @@ function render() {
   $('previewBtn').innerHTML = state.isPreview ? `<i data-lucide="code" class="w-3.5 h-3.5"></i> 편집 모드` : `<i data-lucide="eye" class="w-3.5 h-3.5"></i> 미리보기`;
   $('previewBtn').className = state.isPreview ? 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium' : 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-medium';
   $('viewText').textContent = state.isMobile ? 'PC 보기' : '모바일 가로보기';
-  $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 ${state.isMobile ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' : 'w-full h-screen'}`;
+  $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 \${state.isMobile ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' : 'w-full h-screen'}`;
   
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -610,7 +611,8 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 💡 [다중 모델 자동 우회] 계정이나 지역에 따라 특정 모델이 막혀있는 경우를 돌파하는 자동 Fallback 시스템
+// 💡 [다중 모델 자동 우회 및 최신 규격 교정]
+// 기존 폐기된 구형 모델 대신, 안전하고 확실하게 무료 티어로 지원되는 1.5 계열의 최신 정식 퍼블릭 모델만 사용합니다.
 async function spellCheck(text) {
   const isCanvas = window.location.hostname.includes('googleusercontent.com') || window.location.hostname.includes('webcontainer.io');
   const userKey = localStorage.getItem('user-gemini-key');
@@ -619,45 +621,40 @@ async function spellCheck(text) {
   let modelNames = [];
 
   if (isCanvas) {
-    // Canvas (우측 미리보기) 환경
+    // Canvas (우측 미리보기) 환경: 안전 모델(2.5-preview) 사용
     activeKey = "";
     modelNames = ["gemini-2.5-flash-preview-09-2025"];
   } else {
-    // Vercel (실제 배포) 환경: 선생님의 API 키를 사용하며, 막힐 경우를 대비해 여러 모델을 순차적으로 뚫고 들어갑니다.
+    // Vercel (실제 배포) 환경: 사용자가 입력한 AQ. 또는 AIzaSy 개인 키를 안정적으로 바인딩
     activeKey = userKey?.trim() || "";
     if (!activeKey) {
-      throw new Error("API 키가 없습니다.\n우측 상단의 [🔑] 열쇠 버튼을 눌러 무료 API 키를 등록해주세요.");
+      throw new Error("API 키가 없습니다.\\n우측 상단의 [🔑] 열쇠 버튼을 눌러 무료 API 키를 등록해주세요.");
     }
     
-    // 💡 [핵심 안전장치] 구글 API 키는 'AIza' 혹은 최신 규격인 'AQ.'으로 시작합니다.
+    // 💡 [안전 조치] 구글 API 규정상 키는 무조건 'AIza' 혹은 최신 규격인 'AQ.'으로 시작해야만 합니다.
     if (!activeKey.startsWith("AIza") && !activeKey.startsWith("AQ.")) {
-      throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\n구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\nGoogle AI Studio에서 키를 다시 복사해주세요.");
+      throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\\n구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\\nGoogle AI Studio에서 키를 다시 복사해주세요.");
     }
     
+    // 💡 폐기된 구형 gemini-pro / gemini-1.0-pro는 접근 권한 오류를 발생시킵니다.
+    // 100% 정식 개방된 무료 최적의 1.5 라이트급 라인업 모델들만 순서대로 호출하도록 변경합니다.
     modelNames = [
-      "gemini-1.5-flash-latest", // 1순위: 최신 플래시 (가장 확실하게 열려있음)
-      "gemini-1.5-flash",        // 2순위: 기본 플래시
-      "gemini-1.5-pro",          // 3순위: 프로 모델
-      "gemini-1.0-pro"           // 4순위: 구형 프로 모델
+      "gemini-1.5-flash",    // 1순위: 메인 무료 최고 범용 속도 모델
+      "gemini-1.5-flash-8b", // 2순위: 초고속 8B 모델 (접근성 및 권한 허용이 가장 확실함)
+      "gemini-1.5-pro"       // 3순위: 정밀 분석용 프로 모델
     ];
   }
 
   let lastErrorMsg = "";
   
   for (const modelName of modelNames) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/\${modelName}:generateContent?key=\${activeKey}`;
     const payload = {
       contents: [{ parts: [{ text: text }] }],
       systemInstruction: { parts: [{ text: "당신은 전문 교정자입니다. 제공된 텍스트의 맞춤법과 띄어쓰기를 문맥에 맞게 자연스럽게 교정하세요. 응답에는 어떠한 부연 설명이나 마크다운 코드 블록(```)도 절대 포함하지 말고, 오직 교정된 순수 텍스트 결과만 출력하세요." }] }
     };
-
-    // 구형(gemini-1.0-pro) 모델은 systemInstruction을 미지원하므로 프롬프트에 합칩니다.
-    if (modelName === "gemini-1.0-pro") {
-      delete payload.systemInstruction;
-      payload.contents[0].parts[0].text = "당신은 전문 교정자입니다. 다음 텍스트의 맞춤법과 띄어쓰기를 문맥에 맞게 자연스럽게 교정하세요. 부연 설명이나 기호 없이 교정된 결과만 출력하세요:\n\n" + text;
-    }
     
-    let retries = 2; // 각 모델당 2번씩 재시도
+    let retries = 2; // 각 모델당 2번씩만 꼼꼼히 재시도
     let delay = 1000;
     
     for (let i = 0; i < retries; i++) {
@@ -670,15 +667,14 @@ async function spellCheck(text) {
         
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          const errMsg = errData.error?.message || `HTTP 에러코드: ${res.status}`;
+          const errMsg = errData.error?.message || `HTTP 에러코드: \${res.status}`;
           
           if (res.status === 400 && errMsg.toLowerCase().includes('key not valid')) {
-            throw new Error("API 키가 유효하지 않습니다. 올바른 키인지 다시 확인해주세요.\n(" + errMsg + ")");
+            throw new Error("API 키가 유효하지 않습니다. 올바른 키인지 다시 확인해주세요.\\n(" + errMsg + ")");
           }
           if (res.status === 403) {
-            throw new Error("API 키에 접근 권한이 없습니다.\n(" + errMsg + ")");
+            throw new Error("API 키에 접근 권한이 없거나 설정이 차단되었습니다.\\n(" + errMsg + ")");
           }
-          // Not Found(404) 등의 에러는 throw해서 캐치된 후 다음 모델로 넘어가게 유도
           throw new Error(errMsg);
         }
         
@@ -687,16 +683,16 @@ async function spellCheck(text) {
         
         if (!result) throw new Error("AI가 응답을 반환하지 않았습니다.");
         
-        result = result.replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
-        return result; // 💡 성공하면 즉시 교정된 텍스트 반환
+        result = result.replace(/^```[\s\S]*?\\n/g, '').replace(/```$/g, '').trim();
+        return result; // 💡 성공 시 즉시 교정 텍스트 반환
 
       } catch (e) {
         lastErrorMsg = e.message;
-        // 인증/권한 에러거나 형식적 오류면 더 이상 다른 모델을 찾지 않고 즉시 중단
-        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('AQ.') || lastErrorMsg.includes('AIza')) {
+        // 키 인증 실패나 만료 등 치명적 권한 문제는 릴레이 우회 없이 즉시 정지시킵니다.
+        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('API key')) {
           throw new Error(lastErrorMsg);
         }
-        // 모델이 막힌 거라면 다음 모델로 넘어가기 위해 break
+        // 모델이 지원되지 않거나 찾지 못한 경우(404)에만 다음 모델로 바톤 터치
         if (i === retries - 1 || lastErrorMsg.includes('not found') || lastErrorMsg.includes('not supported')) {
           break; 
         }
@@ -706,8 +702,8 @@ async function spellCheck(text) {
     }
   }
   
-  // 준비된 모든 모델이 실패한 경우
-  throw new Error(`사용 가능한 AI 모델을 찾지 못했습니다.\n(마지막 에러: ${lastErrorMsg})`);
+  // 준비된 최신 1.5 계열 모델들이 모두 권한/접속 문제로 실패했을 경우 최종 예외 출력
+  throw new Error(`사용 가능한 최신 AI 모델을 찾지 못했습니다.\\n(마지막 시도 에러: \${lastErrorMsg})`);
 }
 
 // 💡 [안내 메시지 개선] 지금 어느 환경에서 테스트하고 있는지 팝업으로 명확히 알려줍니다.
@@ -728,7 +724,7 @@ $('apiKeyOk').onclick = () => {
   
   // 💡 저장할 때도 진짜 API 키인지 한번 더 검사합니다. (AIza 및 AQ. 추가)
   if (val && !val.startsWith("AIza") && !val.startsWith("AQ.")) {
-    return msg('경고', "올바른 구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n입력하신 값을 다시 한번 확인해주세요.");
+    return msg('경고', "올바른 구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\\n입력하신 값을 다시 한번 확인해주세요.");
   }
   
   localStorage.setItem('user-gemini-key', val);
@@ -737,7 +733,7 @@ $('apiKeyOk').onclick = () => {
   
   const isCanvas = window.location.hostname.includes('googleusercontent.com') || window.location.hostname.includes('webcontainer.io');
   if (isCanvas) {
-    msg('저장 완료', 'API 키가 저장되었습니다!\n\n(참고: 현재 이 에디터(미리보기) 화면 안에서는 늘 내장된 기본 AI가 작동합니다. 지금 입력하신 개인 키는 Vercel로 배포된 실제 웹사이트에서부터 자동으로 사용됩니다.)');
+    msg('저장 완료', 'API 키가 저장되었습니다!\\n\\n(참고: 현재 이 에디터(미리보기) 화면 안에서는 늘 내장된 기본 AI가 작동합니다. 지금 입력하신 개인 키는 Vercel로 배포된 실제 웹사이트에서부터 자동으로 사용됩니다.)');
   } else {
     msg('저장 완료', 'API 키가 안전하게 브라우저에 저장되었습니다. 이제 배포된 사이트에서도 맞춤법 교정이 작동합니다!');
   }
@@ -757,7 +753,7 @@ $('spellCheckBtn').onclick = async () => {
     const correctedText = await spellCheck(activeTab.content);
     
     const newId = `tab-${Date.now()}`;
-    const newTabTitle = `${activeTab.title} [교정됨]`;
+    const newTabTitle = `\${activeTab.title} [교정됨]`;
     const newTab = { id: newId, title: newTabTitle, content: correctedText };
     
     const currentIndex = state.tabs.findIndex(t => t.id === state.activeId);
@@ -769,7 +765,7 @@ $('spellCheckBtn').onclick = async () => {
     render();
     msg('교정 완료', '새로운 탭에 맞춤법 교정 결과가 작성되었습니다.');
   } catch (err) {
-    msg('오류 발생', `맞춤법 교정 중 문제가 발생했습니다.\n\n[상세 원인]\n${err.message}`);
+    msg('오류 발생', `맞춤법 교정 중 문제가 발생했습니다.\\n\\n[상세 원인]\\n\${err.message}`);
   } finally {
     $('aiModal').classList.add('hidden');
     $('aiModal').classList.remove('flex');
@@ -789,7 +785,7 @@ $('saveProjectBtn').onclick = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${state.prefix ? state.prefix + '-' : ''}AI답변_프로젝트백업_${Date.now()}.json`;
+  a.download = `\${state.prefix ? state.prefix + '-' : ''}AI답변_프로젝트백업_\${Date.now()}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -801,7 +797,7 @@ $('saveProjectBtn').onclick = () => {
 $('loadProjectBtn').onclick = () => {
   const hasContent = state.tabs.some(t => t.content.trim().length > 0);
   if (hasContent) {
-    customConfirm('프로젝트 불러오기', '백업된 프로젝트를 불러오면 현재 작성 중인 모든 내용이 덮어씌워집니다.\n계속 진행하시겠습니까?', () => {
+    customConfirm('프로젝트 불러오기', '백업된 프로젝트를 불러오면 현재 작성 중인 모든 내용이 덮어씌워집니다.\\n계속 진행하시겠습니까?', () => {
       $('loadProjectInput').click();
     });
   } else {
@@ -861,7 +857,7 @@ async function genPdf(title, tabsData, file) {
 
   const pdfStyle = `
     <style>
-      .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
+      .pdf-box { padding:40px; font-family:'\${state.settings.fontFamily}', sans-serif; font-size:\${state.settings.fontSize}px; line-height:\${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
       .pdf-md p, .pdf-md li, .pdf-md blockquote, .pdf-md pre, .pdf-md tr, .pdf-md h1, .pdf-md h2, .pdf-md h3, .pdf-md figure { page-break-inside: avoid !important; break-inside: avoid !important; break-inside: avoid-page !important; }
       .pdf-md h1{font-size:2em; font-weight:bold; margin:1.5rem 0 1rem; border-bottom:3px solid #111; padding-bottom:0.4rem;}
       .pdf-md h2{font-size:1.6em; font-weight:bold; margin:1.2rem 0 0.8rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.3rem;}
@@ -906,17 +902,17 @@ async function genPdf(title, tabsData, file) {
       const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
       
       const htmlString = `
-        ${pdfStyle}
+        \${pdfStyle}
         <div class="pdf-box">
-          ${i === 0 ? `
+          \${i === 0 ? `
           <div style="text-align:center; border-bottom:4px solid #1f2937; padding-bottom:1rem; margin-bottom:2rem">
-            <h1 style="font-size:28px; font-weight:800; margin:0; color:#111827">${safeTitle}</h1>
-            ${safePrefix ? `<p style="color:#6b7280; margin-top:8px">프로젝트 접두사: ${safePrefix}</p>` : ''}
+            <h1 style="font-size:28px; font-weight:800; margin:0; color:#111827">\${safeTitle}</h1>
+            \${safePrefix ? `<p style="color:#6b7280; margin-top:8px">프로젝트 접두사: \${safePrefix}</p>` : ''}
           </div>
           ` : ''}
           <div class="pdf-md">
-            ${tabsData.length > 1 ? `<h2 style="color:#2563eb;">[ ${esc(tab.title)} ]</h2><hr style="margin-bottom:1rem; border-color:#e5e7eb;"/>` : ''}
-            ${htmlContent}
+            \${tabsData.length > 1 ? `<h2 style="color:#2563eb;">[ \${esc(tab.title)} ]</h2><hr style="margin-bottom:1rem; border-color:#e5e7eb;"/>` : ''}
+            \${htmlContent}
           </div>
         </div>
       `;
@@ -961,7 +957,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest('.tabBtn'); 
   if (b) { state.editingId = null; state.activeId = b.dataset.id; render(); return; }
   if (e.target.id === 'addTab') {
-    state.editingId = null; const id = `tab-${Date.now()}`; state.tabs.push({id,title:'새 탭',content:''}); state.activeId = id; save(); render();
+    state.editingId = null; const id = `tab-\${Date.now()}`; state.tabs.push({id,title:'새 탭',content:''}); state.activeId = id; save(); render();
   }
 });
 
@@ -973,10 +969,10 @@ $('tabBar').addEventListener('dblclick', e => {
 
 $('editor').addEventListener('input', e => { 
   state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: e.target.value } : t); save(); 
-  const charCount = e.target.value.replace(/\n+$/, '').length;
-  const charNoSpace = e.target.value.replace(/\s/g, '').length;
-  const wordCount = e.target.value.trim() ? e.target.value.trim().split(/\s+/).length : 0;
-  $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
+  const charCount = e.target.value.replace(/\\n+$/, '').length;
+  const charNoSpace = e.target.value.replace(/\\s/g, '').length;
+  const wordCount = e.target.value.trim() ? e.target.value.trim().split(/\\s+/).length : 0;
+  $('cnt').innerHTML = `글자수: <strong class="text-blue-600">\${charCount}</strong> <span class="text-gray-400">(\${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">\${wordCount}</strong>`;
 });
 
 $('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
@@ -1013,7 +1009,7 @@ $('fontOk').onclick = () => {
 
 $('delFontBtn').onclick = () => {
   const curFont = state.settings.fontFamily;
-  customConfirm('글꼴 삭제', `등록하신 커스텀 글꼴 "${curFont}"을(를) 삭제하시겠습니까?`, () => {
+  customConfirm('글꼴 삭제', `등록하신 커스텀 글꼴 "\${curFont}"을(를) 삭제하시겠습니까?`, () => {
     state.settings.customFonts = state.settings.customFonts.filter(f => f.name !== curFont);
     state.settings.fontFamily = "Pretendard"; save(); render();
   });
@@ -1049,8 +1045,8 @@ $('convertCodeBlocks').onclick = () => {
   if (!activeTab || !activeTab.content.trim()) return msg('알림', '변환을 진행할 텍스트가 현재 탭에 없습니다.');
   if (!/```[\s\S]*?```/.test(activeTab.content)) return msg('알림', '본문에 백틱(```)으로 묶인 코드 블록 영역이 감지되지 않았습니다.');
 
-  const convertedText = activeTab.content.replace(/```[a-zA-Z0-9-]*\r?\n([\s\S]*?)```/g, (match, codeContent) => {
-    return codeContent.split(/\r?\n/).map(line => `> ${line}`).join('\n');
+  const convertedText = activeTab.content.replace(/```[a-zA-Z0-9-]*\\r?\\n([\\s\\S]*?)```/g, (match, codeContent) => {
+    return codeContent.split(/\\r?\\n/).map(line => `> \${line}`).join('\\n');
   });
   state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: convertedText } : t); save(); render();
   msg('변환 완료', '본문 안의 코드 블록을 독자들이 읽기 편한 인용구 서식(>)으로 일괄 자동 변환했습니다!');
@@ -1059,7 +1055,7 @@ $('convertCodeBlocks').onclick = () => {
 $('clearCur').onclick = () => { 
   const a = state.tabs.find(t => t.id === state.activeId); 
   if (!a?.content.trim()) return msg('알림', '이미 비어있음'); 
-  customConfirm('탭 내용 비우기', `"${a.title}" 탭의 내용을 모두 지우시겠습니까?`, () => {
+  customConfirm('탭 내용 비우기', `"\${a.title}" 탭의 내용을 모두 지우시겠습니까?`, () => {
     state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: '' } : t); save(); render(); 
   });
 };
@@ -1072,35 +1068,35 @@ $('clearAll').onclick = () => {
 
 $('txtCur').onclick = () => { 
   const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('실패', '내용 없음'); dl(`${state.prefix ? state.prefix + '-' : ''}${a.title}.txt`, a.content); 
+  if (!a?.content.trim()) return msg('실패', '내용 없음'); dl(`\${state.prefix ? state.prefix + '-' : ''}\${a.title}.txt`, a.content); 
 };
 $('txtAll').onclick = () => { 
   const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('실패', '내용 없음'); dl(`${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.txt`, l.map(t => `========== [ ${t.title} ] ==========\n${t.content}`).join('\n\n')); 
+  if (!l.length) return msg('실패', '내용 없음'); dl(`\${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.txt`, l.map(t => `========== [ \${t.title} ] ==========\\n\${t.content}`).join('\\n\\n')); 
 };
 $('txtEach').onclick = async () => { 
   const l = state.tabs.filter(t => t.content.trim()); 
   if (!l.length) return msg('실패', '내용 없음'); 
-  for (const t of l) { dl(`${state.prefix ? state.prefix + '-' : ''}${t.title}.txt`, t.content); await new Promise(r => setTimeout(r, 400)); } 
+  for (const t of l) { dl(`\${state.prefix ? state.prefix + '-' : ''}\${t.title}.txt`, t.content); await new Promise(r => setTimeout(r, 400)); } 
 };
 
 $('pdfCur').onclick = async () => { 
   const a = state.tabs.find(t => t.id === state.activeId); 
   if (!a?.content.trim()) return msg('불가', '내용 없음'); 
-  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); $('pdfTxt').textContent = `"${a.title}" PDF 생성중`; 
+  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); $('pdfTxt').textContent = `"\${a.title}" PDF 생성중`; 
   if (!state.isPreview) { state.isPreview = true; render(); }
   await new Promise(r => setTimeout(r, 400)); 
-  await genPdf(a.title, [{title: a.title, content: a.content}], `${state.prefix ? state.prefix + '-' : ''}${a.title}.pdf`); 
+  await genPdf(a.title, [{title: a.title, content: a.content}], `\${state.prefix ? state.prefix + '-' : ''}\${a.title}.pdf`); 
   $('pdfModal').classList.add('hidden'); 
 };
 
 $('pdfAll').onclick = async () => { 
   const l = state.tabs.filter(t => t.content.trim()); 
   if (!l.length) return msg('불가', '내용 없음'); 
-  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); $('pdfTxt').textContent = '통합 PDF 생성중\n(문서가 길 경우 분할 처리로 다소 시간이 소요됩니다)'; 
+  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); $('pdfTxt').textContent = '통합 PDF 생성중\\n(문서가 길 경우 분할 처리로 다소 시간이 소요됩니다)'; 
   if (!state.isPreview) { state.isPreview = true; render(); }
   await new Promise(r => setTimeout(r, 400)); 
-  await genPdf('AI 답변 비교 통합 문서', l, `${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.pdf`); 
+  await genPdf('AI 답변 비교 통합 문서', l, `\${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.pdf`); 
   $('pdfModal').classList.add('hidden'); 
 };
 
@@ -1110,8 +1106,8 @@ $('pdfEach').onclick = async () => {
   $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); 
   if (!state.isPreview) { state.isPreview = true; render(); }
   for (let i = 0; i < l.length; i++) { 
-    $('pdfTxt').textContent = `개별 PDF 저장 중... (${i + 1}/${l.length})\n- ${l[i].title}`; 
-    await genPdf(l[i].title, [{title: l[i].title, content: l[i].content}], `${state.prefix ? state.prefix + '-' : ''}${l[i].title}.pdf`); 
+    $('pdfTxt').textContent = `개별 PDF 저장 중... (\${i + 1}/\${l.length})\\n- \${l[i].title}`; 
+    await genPdf(l[i].title, [{title: l[i].title, content: l[i].content}], `\${state.prefix ? state.prefix + '-' : ''}\${l[i].title}.pdf`); 
     await new Promise(r => setTimeout(r, 500)); 
   } 
   $('pdfModal').classList.add('hidden'); 
