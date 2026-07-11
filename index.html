@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
 
 <!-- 💡 3. 인라인 매니페스트 설정 -->
-<link class="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
+<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
 <!-- 💡 4. 대한민국 가장 인기 있는 고품격 웹폰트 외부 리소스 링크 적용 -->
@@ -136,7 +136,7 @@
 </head>
 <body class="bg-gray-800 min-h-screen flex items-center justify-center print:bg-white transition-colors duration-300">
 <div id="app" class="flex flex-col bg-gray-50 font-sans w-full h-screen overflow-hidden relative transition-all duration-500">
-  
+ 
   <!-- 1. 상단 글로벌 컨트롤 패널 -->
   <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10 w-full ui-text">
     <div class="flex items-center justify-between w-full sm:w-auto">
@@ -155,8 +155,8 @@
           </a>
         </div>
       </div>
-      
-      <!-- 프로젝트 단위 백업 및 복구 버튼 -->
+     
+      <!-- 💡 [신규 추가] 프로젝트 단위 백업 및 복구 버튼 -->
       <div class="flex items-center gap-1.5 ml-auto sm:ml-4 pl-2 sm:border-l border-gray-200">
         <button id="saveProjectBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg border border-teal-200 text-xs font-bold transition shadow-sm" title="작업 중인 프로젝트 전체를 파일로 백업">
           <i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">백업</span>
@@ -219,14 +219,14 @@
     </div>
     <div class="flex items-center gap-1.5 flex-shrink-0">
       <button id="previewBtn" class="flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border"></button>
-      
+     
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
         <button id="pdfAll" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
         <button id="pdfEach" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
-      
+     
       <!-- TXT 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="txtCur" class="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs" title="현재 탭 TXT 저장"><i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 TXT</span></button>
@@ -250,16 +250,6 @@
         <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>코드 ➡️ 인용구
         </button>
-        <!-- 맞춤법 교정 버튼 그룹 -->
-        <div class="flex rounded shadow-sm">
-          <button id="spellCheckBtn" class="px-2 py-1 text-emerald-600 border border-emerald-200 rounded-l bg-white hover:bg-emerald-50 font-medium flex items-center gap-1" title="AI를 활용하여 현재 탭의 맞춤법과 띄어쓰기를 교정합니다">
-            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>맞춤법 교정
-          </button>
-          <button id="apiSettingsBtn" class="px-2 py-1 text-emerald-600 border border-emerald-200 border-l-0 rounded-r bg-white hover:bg-emerald-50 font-medium flex items-center" title="외부 배포용 구글 API 키 설정">
-            <i data-lucide="key" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-
         <button id="clearCur" class="px-2 py-1 text-red-600 border border-red-200 rounded bg-white hover:bg-red-50 font-medium">현재 탭 비우기</button>
         <button id="clearAll" class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 font-medium shadow-sm">전체 삭제</button>
       </div>
@@ -268,7 +258,7 @@
 
   <!-- 4. 에디터 및 마크다운 렌더링 영역 -->
   <div class="flex-1 bg-white relative flex flex-col p-2 sm:p-4 shadow-inner overflow-hidden">
-    <textarea id="editor" spellcheck="true" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
+    <textarea id="editor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
     <div id="preview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-4 md:p-6 markdown-body text-gray-800 bg-white hidden"></div>
   </div>
 </div>
@@ -285,27 +275,11 @@
   </div>
 </div>
 
-<!-- 구글 API 키 설정 모달 -->
-<div id="apiKeyModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4">
-  <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl animate-in fade-in duration-200">
-    <h2 class="font-bold mb-2 text-lg text-gray-800">🔑 구글 Gemini API 키 설정</h2>
-    <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-      Vercel 등 개인 배포 환경에서 맞춤법 교정 AI를 사용하려면 무료 API 키가 필요합니다.<br/>
-      <a href="[https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)" target="_blank" class="text-blue-500 hover:underline">Google AI Studio</a>에서 발급받은 키를 입력하세요. (브라우저에만 안전하게 저장됩니다)
-    </p>
-    <input id="apiKeyValue" type="password" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="AQ... 또는 AIzaSy...">
-    <div class="flex gap-2">
-      <button id="apiKeyCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2.5 font-semibold text-gray-700 text-sm">취소</button>
-      <button id="apiKeyOk" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold text-sm">저장하기</button>
-    </div>
-  </div>
-</div>
-
 <div id="msgModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4 animate-in fade-in duration-150">
   <div class="bg-white p-6 rounded-xl w-full max-w-sm text-center shadow-2xl">
     <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="alert-circle" class="w-6 h-6"></i></div>
     <h2 id="msgT" class="font-bold mb-2 text-lg text-gray-800"></h2>
-    <p id="msgM" class="text-gray-600 mb-6 whitespace-pre-line text-sm"></p>
+    <p id="msgM" class="text-gray-600 mb-6"></p>
     <button id="msgOk" class="bg-blue-600 hover:bg-blue-700 text-white w-full rounded-lg py-2.5 font-semibold">닫기</button>
   </div>
 </div>
@@ -330,20 +304,11 @@
   </div>
 </div>
 
-<!-- AI 처리 중 상태 표시 모달 -->
-<div id="aiModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex-col items-center justify-center z-[9999] p-4">
-  <div class="bg-white p-6 rounded-2xl text-center max-w-sm w-full shadow-2xl">
-    <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-    <h3 class="font-bold text-lg text-gray-800">AI 맞춤법 교정 중</h3>
-    <p class="text-sm text-gray-600 whitespace-pre-line mt-1">문맥을 파악하여 띄어쓰기와<br/>맞춤법을 깔끔하게 교정하고 있습니다...</p>
-  </div>
-</div>
-
 <div id="fontModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4">
   <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl animate-in fade-in duration-200">
     <h2 class="font-bold mb-1 text-lg text-gray-800">나만의 글꼴 추가</h2>
     <p class="text-xs text-slate-500 mb-4 leading-relaxed">구글 폰트 주소 혹은 눈누의 글꼴 direct 파일 주소(.woff, .woff2, .ttf)를 넣어 글꼴을 직접 등록하세요.</p>
-    
+   
     <div class="mb-4 bg-slate-50 p-3 rounded-lg border">
       <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">원클릭 명품 글꼴 추가</label>
       <div class="flex flex-wrap gap-1.5">
@@ -518,7 +483,7 @@ function render() {
   $('tabSize').value = state.settings.tabFontSize;
   $('uiFontSize').value = uiSizeVal;
   $('preLabel').textContent = state.prefix || '(없음)';
-  
+ 
   if (state.settings.customFonts.some(f => f.name === state.settings.fontFamily)) {
     $('delFontBtn').classList.remove('hidden');
   } else {
@@ -526,7 +491,7 @@ function render() {
   }
 
   document.documentElement.style.setProperty('--ui-font-size', uiSizeVal + 'px');
-  
+ 
   const activeFontName = state.settings.fontFamily;
   const statusBadge = $('fontStatusBadge');
   if (statusBadge) {
@@ -579,7 +544,7 @@ function render() {
     ed.style.lineHeight = state.settings.lineSpacing; 
     pv.style.lineHeight = state.settings.lineSpacing;
     ed.value = active.content;
-    
+   
     if (state.isPreview) { 
       ed.classList.add('hidden'); pv.classList.remove('hidden'); 
       pv.innerHTML = window.marked ? marked.parse(active.content || '내용이 없습니다.') : esc(active.content); 
@@ -593,7 +558,7 @@ function render() {
   $('previewBtn').className = state.isPreview ? 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium' : 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-medium';
   $('viewText').textContent = state.isMobile ? 'PC 보기' : '모바일 가로보기';
   $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 ${state.isMobile ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' : 'w-full h-screen'}`;
-  
+ 
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -610,168 +575,7 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 💡 [하이브리드 다중 우회 시스템 최적화]
-// Vercel 외부 서버에서도 'AQ.' 최신 인증키를 수락하여 즉시 맞춤법을 검사해 주는 가장 호환성 높은 안전 모델들을 선별 탑재했습니다.
-async function spellCheck(text) {
-  const isCanvas = window.location.hostname.includes('googleusercontent.com') || window.location.hostname.includes('webcontainer.io');
-  const userKey = localStorage.getItem('user-gemini-key');
-  
-  let activeKey = "";
-  let combinations = [];
-
-  if (isCanvas) {
-    // Canvas (우측 미리보기) 환경: 안전 모델(2.5-preview) 사용
-    activeKey = "";
-    combinations = [
-      { version: "v1beta", model: "gemini-2.5-flash-preview-09-2025" }
-    ];
-  } else {
-    // Vercel (실제 배포) 환경: 사용자 입력 개인 키 바인딩
-    activeKey = userKey?.trim() || "";
-    if (!activeKey) {
-      throw new Error("API 키가 없습니다.\n우측 상단의 [🔑] 열쇠 버튼을 눌러 무료 API 키를 등록해주세요.");
-    }
-    
-    if (!activeKey.startsWith("AIza") && !activeKey.startsWith("AQ.")) {
-      throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\n구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\nGoogle AI Studio에서 키를 다시 복사해주세요.");
-    }
-    
-    // 💡 최신 구글 API 클라우드 권한 및 신규 프로젝트 상태를 모조리 뚫어내기 위한 최신 호환 조합만 남겼습니다.
-    combinations = [
-      { version: "v1", model: "gemini-1.5-flash-latest" },
-      { version: "v1", model: "gemini-1.5-flash" },
-      { version: "v1beta", model: "gemini-1.5-flash" },
-      { version: "v1beta", model: "gemini-1.5-pro-latest" }
-    ];
-  }
-
-  let lastErrorMsg = "";
-  
-  for (const combo of combinations) {
-    const url = `https://generativelanguage.googleapis.com/${combo.version}/models/${combo.model}:generateContent?key=${activeKey}`;
-    const payload = {
-      contents: [{ parts: [{ text: text }] }],
-      systemInstruction: { parts: [{ text: "당신은 전문 교정자입니다. 제공된 텍스트의 맞춤법과 띄어쓰기를 문맥에 맞게 자연스럽게 교정하세요. 응답에는 어떠한 부연 설명이나 마크다운 코드 블록(```)도 절대 포함하지 말고, 오직 교정된 순수 텍스트 결과만 출력하세요." }] }
-    };
-    
-    let retries = 2; // 각 조합별로 2번씩 꼼꼼하게 교차 재시도
-    let delay = 1000;
-    
-    for (let i = 0; i < retries; i++) {
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          const errMsg = errData.error?.message || `HTTP 에러코드: ${res.status}`;
-          
-          if (res.status === 400 && errMsg.toLowerCase().includes('key not valid')) {
-            throw new Error("API 키가 유효하지 않습니다. 올바른 키인지 다시 확인해주세요.\n(" + errMsg + ")");
-          }
-          if (res.status === 403) {
-            throw new Error("API 키에 접근 권한이 없거나 설정이 차단되었습니다.\n(" + errMsg + ")");
-          }
-          throw new Error(errMsg);
-        }
-        
-        const data = await res.json();
-        let result = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!result) throw new Error("AI가 응답을 반환하지 않았습니다.");
-        
-        result = result.replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
-        return result; // 💡 성공 시 즉시 교정 완료된 최종 결과 텍스트 반환
-
-      } catch (e) {
-        lastErrorMsg = e.message;
-        // 키 자체의 무효/만료와 같은 심각한 핵심 권한 예외는 무의미한 모델 릴레이 없이 즉시 처리를 정지시킵니다.
-        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('API key')) {
-          throw new Error(lastErrorMsg);
-        }
-        // 특정 모델/버전이 지원되지 않거나 찾지 못한 경우(404)에만 다음 하이브리드 조합으로 바톤을 연결
-        if (i === retries - 1 || lastErrorMsg.includes('not found') || lastErrorMsg.includes('not supported')) {
-          break; 
-        }
-        await new Promise(r => setTimeout(r, delay));
-        delay *= 2;
-      }
-    }
-  }
-  
-  // 모든 조합 모델이 권한/접속 문제로 실패했을 경우 최종 예외 출력
-  throw new Error(`사용 가능한 최신 AI 모델을 찾지 못했습니다.\n(마지막 시도 에러: ${lastErrorMsg})`);
-}
-
-// 💡 [안내 메시지 개선] 지금 어느 환경에서 테스트하고 있는지 팝업으로 명확히 알려줍니다.
-$('apiSettingsBtn').onclick = () => {
-  $('apiKeyValue').value = localStorage.getItem('user-gemini-key') || '';
-  $('apiKeyModal').classList.remove('hidden');
-  $('apiKeyModal').classList.add('flex');
-  $('apiKeyValue').focus();
-};
-
-$('apiKeyCancel').onclick = () => {
-  $('apiKeyModal').classList.add('hidden');
-  $('apiKeyModal').classList.remove('flex');
-};
-
-$('apiKeyOk').onclick = () => {
-  const val = $('apiKeyValue').value.trim();
-  
-  // 💡 저장할 때도 진짜 API 키인지 한번 더 검사합니다. (AIza 및 AQ. 추가)
-  if (val && !val.startsWith("AIza") && !val.startsWith("AQ.")) {
-    return msg('경고', "올바른 구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n입력하신 값을 다시 한번 확인해주세요.");
-  }
-  
-  localStorage.setItem('user-gemini-key', val);
-  $('apiKeyModal').classList.add('hidden');
-  $('apiKeyModal').classList.remove('flex');
-  
-  const isCanvas = window.location.hostname.includes('googleusercontent.com') || window.location.hostname.includes('webcontainer.io');
-  if (isCanvas) {
-    msg('저장 완료', 'API 키가 저장되었습니다!\n\n(참고: 현재 이 에디터(미리보기) 화면 안에서는 늘 내장된 기본 AI가 작동합니다. 지금 입력하신 개인 키는 Vercel로 배포된 실제 웹사이트에서부터 자동으로 사용됩니다.)');
-  } else {
-    msg('저장 완료', 'API 키가 안전하게 브라우저에 저장되었습니다. 이제 배포된 사이트에서도 맞춤법 교정이 작동합니다!');
-  }
-};
-
-
-$('spellCheckBtn').onclick = async () => {
-  const activeTab = state.tabs.find(t => t.id === state.activeId);
-  if (!activeTab || !activeTab.content.trim()) {
-    return msg('알림', '교정할 텍스트가 없습니다.');
-  }
-  
-  $('aiModal').classList.remove('hidden');
-  $('aiModal').classList.add('flex');
-  
-  try {
-    const correctedText = await spellCheck(activeTab.content);
-    
-    const newId = `tab-${Date.now()}`;
-    const newTabTitle = `${activeTab.title} [교정됨]`;
-    const newTab = { id: newId, title: newTabTitle, content: correctedText };
-    
-    const currentIndex = state.tabs.findIndex(t => t.id === state.activeId);
-    state.tabs.splice(currentIndex + 1, 0, newTab);
-    
-    state.activeId = newId;
-    
-    save();
-    render();
-    msg('교정 완료', '새로운 탭에 맞춤법 교정 결과가 작성되었습니다.');
-  } catch (err) {
-    msg('오류 발생', `맞춤법 교정 중 문제가 발생했습니다.\n\n[상세 원인]\n${err.message}`);
-  } finally {
-    $('aiModal').classList.add('hidden');
-    $('aiModal').classList.remove('flex');
-  }
-};
-
+// 💡 [프로젝트 백업 기능] 현재 모든 상태(탭, 내용, 폰트설정 등)를 압축 저장
 $('saveProjectBtn').onclick = () => {
   const exportData = {
     version: "1.0",
@@ -780,7 +584,7 @@ $('saveProjectBtn').onclick = () => {
     settings: state.settings,
     prefix: state.prefix
   };
-  
+ 
   const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -790,10 +594,11 @@ $('saveProjectBtn').onclick = () => {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  
+ 
   msg('백업 완료', '현재의 모든 탭과 설정이 안전하게 파일로 저장되었습니다.');
 };
 
+// 💡 [프로젝트 열기 기능] 백업 파일을 불러와 시스템 복구
 $('loadProjectBtn').onclick = () => {
   const hasContent = state.tabs.some(t => t.content.trim().length > 0);
   if (hasContent) {
@@ -818,11 +623,12 @@ $('loadProjectInput').onchange = (e) => {
         state.settings = data.settings || state.settings;
         state.prefix = data.prefix || '';
         state.activeId = state.tabs[0]?.id || '';
-        
+       
+        // 커스텀 폰트 복구 로직
         if (state.settings.customFonts) {
           state.settings.customFonts.forEach(font => loadCustomFont(font.name, font.url));
         }
-        
+       
         save();
         render();
         msg('복구 완료', '선택하신 백업 파일의 내용을 성공적으로 불러왔습니다.');
@@ -833,6 +639,7 @@ $('loadProjectInput').onchange = (e) => {
       console.error("파일 로드 에러:", err);
       msg('오류 발생', '파일을 읽어오는 중 문제가 발생했습니다.');
     }
+    // 동일한 파일도 다시 불러올 수 있도록 input 초기화
     $('loadProjectInput').value = '';
   };
   reader.readAsText(file);
@@ -843,10 +650,10 @@ async function genPdf(title, tabsData, file) {
     msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
     return; 
   }
-  
+ 
   const origX = window.scrollX;
   const origY = window.scrollY;
-  
+ 
   const appDiv = document.getElementById('app');
   const origDisplay = appDiv.style.display;
   appDiv.style.display = 'none';
@@ -869,7 +676,7 @@ async function genPdf(title, tabsData, file) {
       .pdf-md blockquote p { margin-bottom: 0 !important; color: #374151 !important; font-weight: 500 !important; }
       .pdf-md code { background-color: #f1f5f9 !important; color: #0f172a !important; padding: 2px 6px !important; border-radius: 6px !important; font-size: 0.9em !important; border: 1px solid #e2e8f0 !important; font-weight: 600 !important; }
       .pdf-md pre{background:#1f2937; color:#f9fafb; padding:1rem; border-radius:8px; white-space:pre-wrap; word-break:break-all;}
-      .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.9em; }
+      .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; page-break-inside: auto; }
       .pdf-md tr { page-break-inside: avoid !important; break-inside: avoid !important; }
       .pdf-md th, .pdf-md td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-size: 0.9em; word-break: keep-all; }
       .pdf-md th { background-color: #f1f5f9; font-weight: bold; }
@@ -900,7 +707,7 @@ async function genPdf(title, tabsData, file) {
     for (let i = 0; i < tabsData.length; i++) {
       const tab = tabsData[i];
       const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
-      
+     
       const htmlString = `
         ${pdfStyle}
         <div class="pdf-box">
