@@ -22,12 +22,12 @@
 <meta name="twitter:description" content="정상가치 제작 - 여러 AI의 답변을 편리하게 한눈에 비교하고 마크다운으로 편집하는 스마트 에디터" />
 
 <!-- 💡 3. 인라인 매니페스트 설정 -->
-<link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
+<link class="manifest" href="data:application/manifest+json,{%22name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22short_name%22:%22AI%20%EB%B0%B5%EB%B3%80%20%EB%B9%84%EA%B5%90%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22%231e293b%22}" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 
 <!-- 💡 4. 대한민국 가장 인기 있는 고품격 웹폰트 외부 리소스 링크 적용 -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding.css">
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -250,7 +250,6 @@
         <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>코드 ➡️ 인용구
         </button>
-        
         <!-- 맞춤법 교정 버튼 그룹 -->
         <div class="flex rounded shadow-sm">
           <button id="spellCheckBtn" class="px-2 py-1 text-emerald-600 border border-emerald-200 rounded-l bg-white hover:bg-emerald-50 font-medium flex items-center gap-1" title="AI를 활용하여 현재 탭의 맞춤법과 띄어쓰기를 교정합니다">
@@ -611,50 +610,51 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 💡 [다중 모델 자동 우회 및 최신 규격 교정]
-// 기존 폐기된 구형 모델 대신, 안전하고 확실하게 무료 티어로 지원되는 1.5 계열의 최신 정식 퍼블릭 모델만 사용합니다.
+// 💡 [하이브리드 다중 우회 시스템 최적화]
+// Vercel 외부 서버에서도 'AQ.' 최신 인증키를 수락하여 즉시 맞춤법을 검사해 주는 가장 호환성 높은 안전 모델들을 선별 탑재했습니다.
 async function spellCheck(text) {
   const isCanvas = window.location.hostname.includes('googleusercontent.com') || window.location.hostname.includes('webcontainer.io');
   const userKey = localStorage.getItem('user-gemini-key');
   
   let activeKey = "";
-  let modelNames = [];
+  let combinations = [];
 
   if (isCanvas) {
     // Canvas (우측 미리보기) 환경: 안전 모델(2.5-preview) 사용
     activeKey = "";
-    modelNames = ["gemini-2.5-flash-preview-09-2025"];
+    combinations = [
+      { version: "v1beta", model: "gemini-2.5-flash-preview-09-2025" }
+    ];
   } else {
-    // Vercel (실제 배포) 환경: 사용자가 입력한 AQ. 또는 AIzaSy 개인 키를 안정적으로 바인딩
+    // Vercel (실제 배포) 환경: 사용자 입력 개인 키 바인딩
     activeKey = userKey?.trim() || "";
     if (!activeKey) {
       throw new Error("API 키가 없습니다.\n우측 상단의 [🔑] 열쇠 버튼을 눌러 무료 API 키를 등록해주세요.");
     }
     
-    // 💡 [안전 조치] 구글 API 규정상 키는 무조건 'AIza' 혹은 최신 규격인 'AQ.'으로 시작해야만 합니다.
     if (!activeKey.startsWith("AIza") && !activeKey.startsWith("AQ.")) {
       throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\n구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\nGoogle AI Studio에서 키를 다시 복사해주세요.");
     }
     
-    // 💡 폐기된 구형 gemini-pro / gemini-1.0-pro는 접근 권한 오류를 발생시킵니다.
-    // 100% 정식 개방된 무료 최적의 1.5 라이트급 라인업 모델들만 순서대로 호출하도록 변경합니다.
-    modelNames = [
-      "gemini-1.5-flash",    // 1순위: 메인 무료 최고 범용 속도 모델
-      "gemini-1.5-flash-8b", // 2순위: 초고속 8B 모델 (접근성 및 권한 허용이 가장 확실함)
-      "gemini-1.5-pro"       // 3순위: 정밀 분석용 프로 모델
+    // 💡 최신 구글 API 클라우드 권한 및 신규 프로젝트 상태를 모조리 뚫어내기 위한 최신 호환 조합만 남겼습니다.
+    combinations = [
+      { version: "v1", model: "gemini-1.5-flash-latest" },
+      { version: "v1", model: "gemini-1.5-flash" },
+      { version: "v1beta", model: "gemini-1.5-flash" },
+      { version: "v1beta", model: "gemini-1.5-pro-latest" }
     ];
   }
 
   let lastErrorMsg = "";
   
-  for (const modelName of modelNames) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
+  for (const combo of combinations) {
+    const url = `https://generativelanguage.googleapis.com/${combo.version}/models/${combo.model}:generateContent?key=${activeKey}`;
     const payload = {
       contents: [{ parts: [{ text: text }] }],
       systemInstruction: { parts: [{ text: "당신은 전문 교정자입니다. 제공된 텍스트의 맞춤법과 띄어쓰기를 문맥에 맞게 자연스럽게 교정하세요. 응답에는 어떠한 부연 설명이나 마크다운 코드 블록(```)도 절대 포함하지 말고, 오직 교정된 순수 텍스트 결과만 출력하세요." }] }
     };
     
-    let retries = 2; // 각 모델당 2번씩만 꼼꼼히 재시도
+    let retries = 2; // 각 조합별로 2번씩 꼼꼼하게 교차 재시도
     let delay = 1000;
     
     for (let i = 0; i < retries; i++) {
@@ -684,15 +684,15 @@ async function spellCheck(text) {
         if (!result) throw new Error("AI가 응답을 반환하지 않았습니다.");
         
         result = result.replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
-        return result; // 💡 성공 시 즉시 교정 텍스트 반환
+        return result; // 💡 성공 시 즉시 교정 완료된 최종 결과 텍스트 반환
 
       } catch (e) {
         lastErrorMsg = e.message;
-        // 키 인증 실패나 만료 등 치명적 권한 문제는 릴레이 우회 없이 즉시 정지시킵니다.
+        // 키 자체의 무효/만료와 같은 심각한 핵심 권한 예외는 무의미한 모델 릴레이 없이 즉시 처리를 정지시킵니다.
         if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('API key')) {
           throw new Error(lastErrorMsg);
         }
-        // 모델이 지원되지 않거나 찾지 못한 경우(404)에만 다음 모델로 바톤 터치
+        // 특정 모델/버전이 지원되지 않거나 찾지 못한 경우(404)에만 다음 하이브리드 조합으로 바톤을 연결
         if (i === retries - 1 || lastErrorMsg.includes('not found') || lastErrorMsg.includes('not supported')) {
           break; 
         }
@@ -702,7 +702,7 @@ async function spellCheck(text) {
     }
   }
   
-  // 준비된 최신 1.5 계열 모델들이 모두 권한/접속 문제로 실패했을 경우 최종 예외 출력
+  // 모든 조합 모델이 권한/접속 문제로 실패했을 경우 최종 예외 출력
   throw new Error(`사용 가능한 최신 AI 모델을 찾지 못했습니다.\n(마지막 시도 에러: ${lastErrorMsg})`);
 }
 
