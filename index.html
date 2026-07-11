@@ -250,8 +250,7 @@
         <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>코드 ➡️ 인용구
         </button>
-        
-        <!-- 💡 맞춤법 교정 버튼 그룹 -->
+        <!-- 맞춤법 교정 버튼 그룹 -->
         <div class="flex rounded shadow-sm">
           <button id="spellCheckBtn" class="px-2 py-1 text-emerald-600 border border-emerald-200 rounded-l bg-white hover:bg-emerald-50 font-medium flex items-center gap-1" title="AI를 활용하여 현재 탭의 맞춤법과 띄어쓰기를 교정합니다">
             <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>맞춤법 교정
@@ -294,7 +293,7 @@
       Vercel 등 개인 배포 환경에서 맞춤법 교정 AI를 사용하려면 무료 API 키가 필요합니다.<br/>
       <a href="[https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)" target="_blank" class="text-blue-500 hover:underline">Google AI Studio</a>에서 발급받은 키를 입력하세요. (브라우저에만 안전하게 저장됩니다)
     </p>
-    <input id="apiKeyValue" type="password" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="AIzaSy...">
+    <input id="apiKeyValue" type="password" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="AQ... 또는 AIzaSy...">
     <div class="flex gap-2">
       <button id="apiKeyCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2.5 font-semibold text-gray-700 text-sm">취소</button>
       <button id="apiKeyOk" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold text-sm">저장하기</button>
@@ -630,15 +629,16 @@ async function spellCheck(text) {
       throw new Error("API 키가 없습니다.\n우측 상단의 [🔑] 열쇠 버튼을 눌러 무료 API 키를 등록해주세요.");
     }
     
-    // 💡 [핵심 안전장치] 구글 API 키는 무조건 'AIza'로 시작합니다. 사용자가 잘못된 값을 넣었는지 사전에 100% 차단합니다.
-    if (!activeKey.startsWith("AIza")) {
-      throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\n구글 API 키는 반드시 'AIza'로 시작해야 합니다.\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\nGoogle AI Studio에서 키를 다시 복사해주세요.");
+    // 💡 [핵심 안전장치] 구글 API 키는 'AIza' 혹은 최신 규격인 'AQ.'으로 시작합니다.
+    if (!activeKey.startsWith("AIza") && !activeKey.startsWith("AQ.")) {
+      throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\n구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\nGoogle AI Studio에서 키를 다시 복사해주세요.");
     }
     
     modelNames = [
-      "gemini-1.5-flash",        // 1순위: 기본 플래시 (가장 안정적)
-      "gemini-1.5-pro",          // 2순위: 프로 모델
-      "gemini-1.0-pro"           // 3순위: 구형 프로 모델 (기존 gemini-pro는 폐기되어 이름 변경됨)
+      "gemini-1.5-flash-latest", // 1순위: 최신 플래시 (가장 확실하게 열려있음)
+      "gemini-1.5-flash",        // 2순위: 기본 플래시
+      "gemini-1.5-pro",          // 3순위: 프로 모델
+      "gemini-1.0-pro"           // 4순위: 구형 프로 모델
     ];
   }
 
@@ -692,8 +692,8 @@ async function spellCheck(text) {
 
       } catch (e) {
         lastErrorMsg = e.message;
-        // 인증/권한 에러면 더 이상 다른 모델을 찾지 않고 즉시 중단
-        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('AIza')) {
+        // 인증/권한 에러거나 형식적 오류면 더 이상 다른 모델을 찾지 않고 즉시 중단
+        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('AQ.') || lastErrorMsg.includes('AIza')) {
           throw new Error(lastErrorMsg);
         }
         // 모델이 막힌 거라면 다음 모델로 넘어가기 위해 break
@@ -726,9 +726,9 @@ $('apiKeyCancel').onclick = () => {
 $('apiKeyOk').onclick = () => {
   const val = $('apiKeyValue').value.trim();
   
-  // 💡 저장할 때도 진짜 API 키인지 한번 더 검사합니다.
-  if (val && !val.startsWith("AIza")) {
-    return msg('경고', "올바른 구글 API 키는 반드시 'AIza'로 시작해야 합니다.\n입력하신 값을 다시 한번 확인해주세요.");
+  // 💡 저장할 때도 진짜 API 키인지 한번 더 검사합니다. (AIza 및 AQ. 추가)
+  if (val && !val.startsWith("AIza") && !val.startsWith("AQ.")) {
+    return msg('경고', "올바른 구글 API 키는 반드시 'AIza' 혹은 'AQ.'로 시작해야 합니다.\n입력하신 값을 다시 한번 확인해주세요.");
   }
   
   localStorage.setItem('user-gemini-key', val);
