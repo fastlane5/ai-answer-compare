@@ -155,12 +155,25 @@
           </a>
         </div>
       </div>
-      <button id="btnView" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full border text-sm ml-4">
-        <i data-lucide="smartphone" class="w-4 h-4"></i>
-        <span id="viewText">모바일 가로보기</span>
-      </button>
+      
+      <!-- 💡 [신규 추가] 프로젝트 단위 백업 및 복구 버튼 -->
+      <div class="flex items-center gap-1.5 ml-auto sm:ml-4 pl-2 sm:border-l border-gray-200">
+        <button id="saveProjectBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg border border-teal-200 text-xs font-bold transition shadow-sm" title="작업 중인 프로젝트 전체를 파일로 백업">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">백업</span>
+        </button>
+        <button id="loadProjectBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg border border-orange-200 text-xs font-bold transition shadow-sm" title="백업한 프로젝트 파일을 불러오기">
+          <i data-lucide="folder-open" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">열기</span>
+        </button>
+        <input type="file" id="loadProjectInput" accept=".json" class="hidden" />
+
+        <button id="btnView" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full border text-sm ml-2 transition shadow-sm">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+          <span id="viewText">모바일 가로보기</span>
+        </button>
+      </div>
     </div>
-    <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 custom-scrollbar">
+
+    <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 custom-scrollbar mt-2 sm:mt-0">
       <div class="flex items-center gap-1 flex-shrink-0 sm:border-l sm:pl-4">
         <label class="text-xs font-semibold">글꼴:</label>
         <div class="flex items-center gap-1">
@@ -562,20 +575,85 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 💡 [궁극의 백지 해결 패치] 
-// 1. 앱을 잠깐 숨겨서 z-index 꼼수를 버리고 정석(In-flow) 배치합니다.
-// 2. DOM 렌더링이 100% 끝나고 캡처 체이닝이 제대로 묶이도록 보장합니다.
+// 💡 [프로젝트 백업 기능] 현재 모든 상태(탭, 내용, 폰트설정 등)를 압축 저장
+$('saveProjectBtn').onclick = () => {
+  const exportData = {
+    version: "1.0",
+    timestamp: new Date().toISOString(),
+    tabs: state.tabs,
+    settings: state.settings,
+    prefix: state.prefix
+  };
+  
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${state.prefix ? state.prefix + '-' : ''}AI답변_프로젝트백업_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  
+  msg('백업 완료', '현재의 모든 탭과 설정이 안전하게 파일로 저장되었습니다.');
+};
+
+// 💡 [프로젝트 열기 기능] 백업 파일을 불러와 시스템 복구
+$('loadProjectBtn').onclick = () => {
+  const hasContent = state.tabs.some(t => t.content.trim().length > 0);
+  if (hasContent) {
+    customConfirm('프로젝트 불러오기', '백업된 프로젝트를 불러오면 현재 작성 중인 모든 내용이 덮어씌워집니다.\n계속 진행하시겠습니까?', () => {
+      $('loadProjectInput').click();
+    });
+  } else {
+    $('loadProjectInput').click();
+  }
+};
+
+$('loadProjectInput').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      if (data.tabs && Array.isArray(data.tabs)) {
+        state.tabs = data.tabs;
+        state.settings = data.settings || state.settings;
+        state.prefix = data.prefix || '';
+        state.activeId = state.tabs[0]?.id || '';
+        
+        // 커스텀 폰트 복구 로직
+        if (state.settings.customFonts) {
+          state.settings.customFonts.forEach(font => loadCustomFont(font.name, font.url));
+        }
+        
+        save();
+        render();
+        msg('복구 완료', '선택하신 백업 파일의 내용을 성공적으로 불러왔습니다.');
+      } else {
+        msg('형식 오류', '유효한 프로젝트 백업 파일이 아닙니다.');
+      }
+    } catch (err) {
+      console.error("파일 로드 에러:", err);
+      msg('오류 발생', '파일을 읽어오는 중 문제가 발생했습니다.');
+    }
+    // 동일한 파일도 다시 불러올 수 있도록 input 초기화
+    $('loadProjectInput').value = '';
+  };
+  reader.readAsText(file);
+};
+
 async function genPdf(title, tabsData, file) {
   if (!window.html2pdf || !window.marked) { 
     msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
     return; 
   }
   
-  // 현재 스크롤 위치 기록 및 초기화 (화면 밖 캡처 방지)
   const origX = window.scrollX;
   const origY = window.scrollY;
   
-  // 메인 앱을 숨겨서 html2canvas 렌더링 간섭을 100% 차단합니다.
   const appDiv = document.getElementById('app');
   const origDisplay = appDiv.style.display;
   appDiv.style.display = 'none';
@@ -614,7 +692,6 @@ async function genPdf(title, tabsData, file) {
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
-  // 💡 인쇄 전용 영역을 정상 흐름(in-flow)으로 생성합니다.
   const printZone = document.createElement('div');
   printZone.id = 'print-zone';
   printZone.style.width = '800px';
@@ -649,14 +726,12 @@ async function genPdf(title, tabsData, file) {
 
       const wrapper = document.createElement('div');
       wrapper.innerHTML = htmlString;
-      printZone.appendChild(wrapper); // 꼼수 없이 도화지 안으로 반듯하게 붙임
+      printZone.appendChild(wrapper); 
       wrappers.push(wrapper);
     }
 
-    // 💡 화면 렌더링(글꼴, 레이아웃)이 100% 끝나길 확실하게 기다립니다.
     await new Promise(r => setTimeout(r, 400));
 
-    // 💡 체이닝 구조 완벽 결합
     for (let i = 0; i < wrappers.length; i++) {
       if (i === 0) {
         worker = worker.from(wrappers[i]).toPdf();
@@ -671,7 +746,6 @@ async function genPdf(title, tabsData, file) {
     console.error(err);
     msg('오류', 'PDF 파일 빌드 중 에러가 발생했습니다. 브라우저 메모리가 부족할 수 있습니다.');
   } finally {
-    // 💡 비동기 작업이 100% 끝나면 그제야 가상 도화지들 철거 및 화면 복구
     printZone.remove();
     appDiv.style.display = origDisplay;
     window.scrollTo(origX, origY);
