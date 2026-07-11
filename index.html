@@ -136,7 +136,7 @@
 </head>
 <body class="bg-gray-800 min-h-screen flex items-center justify-center print:bg-white transition-colors duration-300">
 <div id="app" class="flex flex-col bg-gray-50 font-sans w-full h-screen overflow-hidden relative transition-all duration-500">
- 
+  
   <!-- 1. 상단 글로벌 컨트롤 패널 -->
   <div class="bg-white border-b shadow-sm p-2 sm:p-3 flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4 z-10 w-full ui-text">
     <div class="flex items-center justify-between w-full sm:w-auto">
@@ -155,7 +155,7 @@
           </a>
         </div>
       </div>
-     
+      
       <!-- 💡 [신규 추가] 프로젝트 단위 백업 및 복구 버튼 -->
       <div class="flex items-center gap-1.5 ml-auto sm:ml-4 pl-2 sm:border-l border-gray-200">
         <button id="saveProjectBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg border border-teal-200 text-xs font-bold transition shadow-sm" title="작업 중인 프로젝트 전체를 파일로 백업">
@@ -218,15 +218,16 @@
       <button id="delTab" class="flex items-center gap-1 px-2 py-1 border rounded text-red-500 hover:bg-red-50 text-xs"><i data-lucide="trash-2" class="w-3 h-3"></i><span class="hidden sm:inline">탭 삭제</span></button>
     </div>
     <div class="flex items-center gap-1.5 flex-shrink-0">
+      <button id="compareBtn" class="flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border bg-white text-gray-700 hover:bg-gray-50 shadow-sm transition" title="두 개의 탭을 나란히 비교합니다"><i data-lucide="columns" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">비교 모드</span></button>
       <button id="previewBtn" class="flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border"></button>
-     
+      
       <!-- PDF 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="pdfCur" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-xs" title="현재 탭 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 PDF</span></button>
         <button id="pdfAll" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-100 text-green-800 border border-green-300 rounded text-xs font-semibold" title="전체 통합 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">통합 PDF</span></button>
         <button id="pdfEach" class="flex items-center gap-1 px-2 py-1 sm:py-1.5 bg-green-600 text-white rounded text-xs font-semibold" title="전체 개별 PDF 저장"><i data-lucide="file-down" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">개별 PDF</span></button>
       </div>
-     
+      
       <!-- TXT 저장 그룹 -->
       <div class="flex items-center gap-1 sm:border-l sm:pl-3">
         <button id="txtCur" class="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs" title="현재 탭 TXT 저장"><i data-lucide="download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">현재 TXT</span></button>
@@ -256,10 +257,29 @@
     </div>
   </div>
 
-  <!-- 4. 에디터 및 마크다운 렌더링 영역 -->
-  <div class="flex-1 bg-white relative flex flex-col p-2 sm:p-4 shadow-inner overflow-hidden">
-    <textarea id="editor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
-    <div id="preview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-4 md:p-6 markdown-body text-gray-800 bg-white hidden"></div>
+  <!-- 4. 에디터 및 마크다운 렌더링 영역 (비교 모드 지원) -->
+  <div id="mainWorkspace" class="flex-1 relative flex flex-col md:flex-row shadow-inner overflow-hidden bg-gray-300 gap-[1px]">
+    
+    <!-- 왼쪽 메인 창 -->
+    <div id="leftPane" class="flex-1 bg-white relative flex flex-col p-2 sm:p-4 overflow-hidden w-full h-full">
+      <textarea id="editor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="답변을 입력하세요... (내용은 자동 저장됩니다)"></textarea>
+      <div id="preview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-4 md:p-6 markdown-body text-gray-800 bg-white hidden"></div>
+    </div>
+
+    <!-- 오른쪽 비교 창 (기본 숨김) -->
+    <div id="rightPane" class="flex-1 bg-white relative flex flex-col p-2 sm:p-4 overflow-hidden w-full h-full hidden">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+        <div class="flex items-center gap-2">
+          <i data-lucide="layout-template" class="w-4 h-4 text-indigo-500"></i>
+          <span class="text-xs font-bold text-gray-700 ui-text">비교 대상:</span>
+          <select id="compareTabSel" class="border rounded px-2 py-1 text-sm font-semibold outline-none bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100 cursor-pointer ui-text max-w-[150px] sm:max-w-xs truncate"></select>
+        </div>
+        <button id="closeCompareBtn" class="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded transition border border-transparent hover:border-red-200 shadow-sm" title="비교 모드 닫기"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <textarea id="compareEditor" class="flex-1 w-full h-full resize-none outline-none custom-scrollbar p-2" placeholder="비교할 탭을 선택하세요..."></textarea>
+      <div id="comparePreview" class="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-4 md:p-6 markdown-body text-gray-800 bg-white hidden"></div>
+    </div>
+
   </div>
 </div>
 
@@ -308,7 +328,7 @@
   <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl animate-in fade-in duration-200">
     <h2 class="font-bold mb-1 text-lg text-gray-800">나만의 글꼴 추가</h2>
     <p class="text-xs text-slate-500 mb-4 leading-relaxed">구글 폰트 주소 혹은 눈누의 글꼴 direct 파일 주소(.woff, .woff2, .ttf)를 넣어 글꼴을 직접 등록하세요.</p>
-   
+    
     <div class="mb-4 bg-slate-50 p-3 rounded-lg border">
       <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">원클릭 명품 글꼴 추가</label>
       <div class="flex flex-wrap gap-1.5">
@@ -424,6 +444,10 @@ let state = {
   prefix: localStorage.getItem('yt-script-prefix') || '',
   tabs: [],
   activeId: '',
+  editingId: null,
+  isPreview: false,
+  isCompareMode: false,
+  compareId: null,
   settings: JSON.parse(localStorage.getItem('yt-script-settings') || '{"fontFamily":"Pretendard","fontSize":16,"tabFontSize":14,"lineSpacing":1.5,"uiFontSize":16,"customFonts":[]}')
 };
 
@@ -459,6 +483,15 @@ const save = () => {
   }, 400); 
 };
 
+function msg(title, content) {
+  $('msgT').textContent = title;
+  $('msgM').textContent = content;
+  $('msgModal').classList.remove('hidden');
+  $('msgModal').classList.add('flex');
+}
+
+$('msgOk').onclick = () => $('msgModal').classList.add('hidden');
+
 let confirmCallback = null;
 function customConfirm(title, message, onConfirm) {
   $('confirmT').textContent = title;
@@ -483,7 +516,7 @@ function render() {
   $('tabSize').value = state.settings.tabFontSize;
   $('uiFontSize').value = uiSizeVal;
   $('preLabel').textContent = state.prefix || '(없음)';
- 
+  
   if (state.settings.customFonts.some(f => f.name === state.settings.fontFamily)) {
     $('delFontBtn').classList.remove('hidden');
   } else {
@@ -491,7 +524,7 @@ function render() {
   }
 
   document.documentElement.style.setProperty('--ui-font-size', uiSizeVal + 'px');
- 
+  
   const activeFontName = state.settings.fontFamily;
   const statusBadge = $('fontStatusBadge');
   if (statusBadge) {
@@ -520,415 +553,437 @@ function render() {
   $('tabBar').innerHTML = state.tabs.map(t => {
     const isA = t.id === state.activeId;
     if (state.editingId === t.id) {
-      return `<div class="relative flex-shrink-0 group"><div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative"><input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" /><button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded"><svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button><button id="cancelRenameBtn" class="text-red-500 hover:bg-red-50 p-1 rounded"><svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div></div>`;
+      return `<div class="relative flex-shrink-0 group"><div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
+        <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none text-xs sm:text-sm w-24 sm:w-32" />
+        <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded" onclick="finishRename('${t.id}')">
+          <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </button>
+      </div></div>`;
     }
-    return `<div class="relative flex-shrink-0 group"><button data-id="${t.id}" class="tabBtn px-3 sm:px-4 py-1.5 sm:py-2 mx-0.5 rounded-t-lg border-t border-l border-r font-semibold whitespace-nowrap ${isA ? 'bg-white border-gray-300 text-blue-600 shadow-[0_2px_0_0_white]' : 'bg-gray-200 border-transparent text-gray-500 hover:bg-gray-300'}" style="font-size:${state.settings.tabFontSize}px">${esc(t.title)}${t.content.trim() ? '<span class="ml-1.5 sm:ml-2 inline-block w-2.5 h-2.5 bg-green-400 rounded-full"></span>' : ''}</button></div>`;
-  }).join('') + `<button id="addTab" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded-t-lg font-bold ml-1">+</button>`;
+    return `<div class="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap transition-all border-t border-l border-r mx-0.5 mt-1 rounded-t-lg select-none flex items-center gap-1.5 ${isA ? 'bg-white border-gray-200 font-bold text-blue-600 shadow-sm z-10 relative border-b-white transform translate-y-[1px]' : 'bg-gray-100/50 text-gray-500 border-transparent hover:bg-gray-200'}" onclick="selectTab('${t.id}')">
+        ${esc(t.title)}
+        ${isA ? '<div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_4px_rgba(59,130,246,0.6)]"></div>' : ''}
+    </div>`;
+  }).join('') + `<button onclick="addTab()" class="ml-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-600 mb-1 text-xs"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>`;
 
   if (state.editingId) {
-    const input = $('renameInput');
-    if (input) {
-      input.focus(); input.select();
-      input.onkeydown = e => { if (e.key === 'Enter') finishRename(input.value); if (e.key === 'Escape') cancelRename(); };
-      $('saveRenameBtn').onclick = () => finishRename(input.value);
-      $('cancelRenameBtn').onclick = cancelRename;
-    }
+    setTimeout(() => {
+      const input = $('renameInput');
+      if (input) {
+        input.focus();
+        input.select();
+        input.onkeydown = e => { if (e.key === 'Enter') finishRename(state.editingId); };
+      }
+    }, 50);
   }
 
-  const ed = $('editor'), pv = $('preview');
   if (active) {
-    ed.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`; 
-    pv.style.fontFamily = `'${state.settings.fontFamily}', sans-serif`;
-    ed.style.fontSize = state.settings.fontSize + 'px'; 
-    pv.style.fontSize = state.settings.fontSize + 'px';
-    ed.style.lineHeight = state.settings.lineSpacing; 
-    pv.style.lineHeight = state.settings.lineSpacing;
-    ed.value = active.content;
-   
-    if (state.isPreview) { 
-      ed.classList.add('hidden'); pv.classList.remove('hidden'); 
-      pv.innerHTML = window.marked ? marked.parse(active.content || '내용이 없습니다.') : esc(active.content); 
-    } else { 
-      pv.classList.add('hidden'); ed.classList.remove('hidden'); 
-      ed.placeholder = `${active.title} 답변을 입력하세요...\n(내용은 브라우저에 자동 저장됩니다)`; 
+    if (document.activeElement !== $('editor')) $('editor').value = active.content;
+    $('editor').style.fontFamily = state.settings.fontFamily;
+    $('editor').style.fontSize = state.settings.fontSize + 'px';
+    $('editor').style.lineHeight = state.settings.lineSpacing;
+    $('preview').style.fontFamily = state.settings.fontFamily;
+
+    try {
+      $('preview').innerHTML = marked.parse(active.content || '작성된 내용이 없습니다.');
+    } catch(e) {
+      $('preview').innerHTML = '<p class="text-red-500">마크다운 변환 중 오류가 발생했습니다.</p>';
+    }
+  } else {
+    $('editor').value = '';
+    $('preview').innerHTML = '';
+  }
+
+  // 비교 모드 렌더링 로직
+  if (state.isCompareMode) {
+    $('rightPane').classList.remove('hidden');
+    $('rightPane').classList.add('flex');
+    $('compareBtn').classList.add('bg-indigo-100', 'text-indigo-700', 'border-indigo-300');
+    $('compareBtn').classList.remove('bg-white', 'text-gray-700');
+    
+    // 셀렉트 박스 옵션 업데이트
+    $('compareTabSel').innerHTML = state.tabs.map(t => 
+      `<option value="${t.id}" ${state.compareId === t.id ? 'selected' : ''}>${esc(t.title)}</option>`
+    ).join('');
+
+    const compTab = state.tabs.find(t => t.id === state.compareId);
+    if (compTab) {
+      if (document.activeElement !== $('compareEditor')) $('compareEditor').value = compTab.content;
+      $('compareEditor').style.fontFamily = state.settings.fontFamily;
+      $('compareEditor').style.fontSize = state.settings.fontSize + 'px';
+      $('compareEditor').style.lineHeight = state.settings.lineSpacing;
+      $('comparePreview').style.fontFamily = state.settings.fontFamily;
+
+      try {
+        $('comparePreview').innerHTML = marked.parse(compTab.content || '작성된 내용이 없습니다.');
+      } catch(e) {
+        $('comparePreview').innerHTML = '<p class="text-red-500">마크다운 변환 중 오류가 발생했습니다.</p>';
+      }
+    }
+  } else {
+    $('rightPane').classList.add('hidden');
+    $('rightPane').classList.remove('flex');
+    $('compareBtn').classList.remove('bg-indigo-100', 'text-indigo-700', 'border-indigo-300');
+    $('compareBtn').classList.add('bg-white', 'text-gray-700');
+  }
+
+  updatePreviewBtn();
+  lucide.createIcons();
+}
+
+function updatePreviewBtn() {
+  const btn = $('previewBtn');
+  if (state.isPreview) {
+    btn.innerHTML = `<i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 에디터로 돌아가기`;
+    btn.className = "flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border bg-blue-600 text-white border-blue-700 hover:bg-blue-700 shadow-sm transition";
+    $('editor').classList.add('hidden');
+    $('preview').classList.remove('hidden');
+    if($('compareEditor')) $('compareEditor').classList.add('hidden');
+    if($('comparePreview')) $('comparePreview').classList.remove('hidden');
+  } else {
+    btn.innerHTML = `<i data-lucide="eye" class="w-3.5 h-3.5"></i> 웹 미리보기 모드`;
+    btn.className = "flex items-center gap-1 px-3 py-1.5 rounded font-medium text-xs border bg-white text-gray-700 border-gray-300 hover:bg-gray-50 shadow-sm transition";
+    $('editor').classList.remove('hidden');
+    $('preview').classList.add('hidden');
+    if($('compareEditor')) $('compareEditor').classList.remove('hidden');
+    if($('comparePreview')) $('comparePreview').classList.add('hidden');
+  }
+}
+
+// 탭 기능
+window.selectTab = id => { state.activeId = id; state.editingId = null; render(); };
+window.addTab = () => { 
+  const id = `tab-${Date.now()}`; 
+  state.tabs.push({ id, title: `새 탭 ${state.tabs.length + 1}`, content: '' }); 
+  state.activeId = id; save(); render(); 
+};
+window.finishRename = id => {
+  const input = $('renameInput');
+  if (input) {
+    const newTitle = input.value.trim();
+    if (newTitle) {
+      const tab = state.tabs.find(t => t.id === id);
+      if (tab) tab.title = newTitle;
     }
   }
-
-  $('previewBtn').innerHTML = state.isPreview ? `<i data-lucide="code" class="w-3.5 h-3.5"></i> 편집 모드` : `<i data-lucide="eye" class="w-3.5 h-3.5"></i> 미리보기`;
-  $('previewBtn').className = state.isPreview ? 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-600 text-white text-xs font-medium' : 'flex items-center gap-1 px-3 py-1.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-medium';
-  $('viewText').textContent = state.isMobile ? 'PC 보기' : '모바일 가로보기';
-  $('app').className = `flex flex-col bg-gray-50 font-sans overflow-hidden relative transition-all duration-500 ${state.isMobile ? 'w-full max-w-[932px] h-[450px] shadow-2xl sm:rounded-[2rem] sm:border-[12px] sm:border-black' : 'w-full h-screen'}`;
- 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function msg(t, m) { 
-  $('msgT').textContent = t; $('msgM').textContent = m; 
-  $('msgModal').classList.remove('hidden'); $('msgModal').classList.add('flex'); 
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-function dl(name, content) { 
-  const b = new Blob([content], { type: 'text/plain;charset=utf-8' }); 
-  const u = URL.createObjectURL(b); const a = document.createElement('a'); 
-  a.href = u; a.download = sanitize(name); document.body.appendChild(a); 
-  a.click(); a.remove(); URL.revokeObjectURL(u); 
-}
-
-// 💡 [프로젝트 백업 기능] 현재 모든 상태(탭, 내용, 폰트설정 등)를 압축 저장
-$('saveProjectBtn').onclick = () => {
-  const exportData = {
-    version: "1.0",
-    timestamp: new Date().toISOString(),
-    tabs: state.tabs,
-    settings: state.settings,
-    prefix: state.prefix
-  };
- 
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${state.prefix ? state.prefix + '-' : ''}AI답변_프로젝트백업_${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
- 
-  msg('백업 완료', '현재의 모든 탭과 설정이 안전하게 파일로 저장되었습니다.');
+  state.editingId = null;
+  save(); render();
 };
 
-// 💡 [프로젝트 열기 기능] 백업 파일을 불러와 시스템 복구
-$('loadProjectBtn').onclick = () => {
-  const hasContent = state.tabs.some(t => t.content.trim().length > 0);
-  if (hasContent) {
-    customConfirm('프로젝트 불러오기', '백업된 프로젝트를 불러오면 현재 작성 중인 모든 내용이 덮어씌워집니다.\n계속 진행하시겠습니까?', () => {
-      $('loadProjectInput').click();
-    });
-  } else {
-    $('loadProjectInput').click();
+$('rename').onclick = () => {
+  if (state.activeId) { state.editingId = state.activeId; render(); }
+};
+
+$('delTab').onclick = () => {
+  if (state.tabs.length <= 1) return msg('삭제 불가', '최소 1개의 탭은 유지해야 합니다.');
+  customConfirm('탭 삭제', '현재 탭을 삭제하시겠습니까?\n삭제된 내용은 복구할 수 없습니다.', () => {
+    const idx = state.tabs.findIndex(t => t.id === state.activeId);
+    state.tabs.splice(idx, 1);
+    state.activeId = state.tabs[Math.min(idx, state.tabs.length - 1)].id;
+    save(); render();
+  });
+};
+
+$('moveL').onclick = () => {
+  const i = state.tabs.findIndex(t => t.id === state.activeId);
+  if (i > 0) {
+    [state.tabs[i-1], state.tabs[i]] = [state.tabs[i], state.tabs[i-1]];
+    save(); render();
+  }
+};
+$('moveR').onclick = () => {
+  const i = state.tabs.findIndex(t => t.id === state.activeId);
+  if (i < state.tabs.length - 1) {
+    [state.tabs[i], state.tabs[i+1]] = [state.tabs[i+1], state.tabs[i]];
+    save(); render();
   }
 };
 
-$('loadProjectInput').onchange = (e) => {
+$('editor').oninput = e => {
+  const active = state.tabs.find(t => t.id === state.activeId);
+  if (active) { active.content = e.target.value; save(); render(); }
+};
+
+// 비교 모드 관련 이벤트
+$('compareBtn').onclick = () => {
+  state.isCompareMode = !state.isCompareMode;
+  if (state.isCompareMode && !state.compareId) {
+    const other = state.tabs.find(t => t.id !== state.activeId) || state.tabs[0];
+    state.compareId = other ? other.id : state.activeId;
+  }
+  render();
+};
+
+$('closeCompareBtn').onclick = () => {
+  state.isCompareMode = false;
+  render();
+};
+
+$('compareTabSel').onchange = e => {
+  state.compareId = e.target.value;
+  render();
+};
+
+$('compareEditor').oninput = e => {
+  const compTab = state.tabs.find(t => t.id === state.compareId);
+  if (compTab) { compTab.content = e.target.value; save(); render(); }
+};
+
+$('previewBtn').onclick = () => { state.isPreview = !state.isPreview; updatePreviewBtn(); };
+
+$('convertCodeBlocks').onclick = () => {
+  const active = state.tabs.find(t => t.id === state.activeId);
+  if (!active) return;
+  const text = active.content;
+  if (!text.includes('```')) return msg('알림', '본문에 변환할 코드 블록(```)이 없습니다.');
+  
+  customConfirm('인용구로 변환', '코드 블록을 블로그/브런치용 인용구(>) 형식으로 모두 변환할까요?', () => {
+    let lines = text.split('\n');
+    let inBlock = false;
+    let newLines = [];
+    
+    for (let line of lines) {
+      if (line.trim().startsWith('```')) {
+        inBlock = !inBlock;
+        continue;
+      }
+      if (inBlock) newLines.push('> ' + line);
+      else newLines.push(line);
+    }
+    active.content = newLines.join('\n');
+    save(); render();
+    msg('완료', '변환이 완료되었습니다.');
+  });
+};
+
+$('clearCur').onclick = () => {
+  customConfirm('비우기', '현재 탭의 내용을 모두 지우시겠습니까?', () => {
+    const active = state.tabs.find(t => t.id === state.activeId);
+    if (active) { active.content = ''; save(); render(); }
+  });
+};
+
+$('clearAll').onclick = () => {
+  customConfirm('전체 삭제', '모든 탭의 내용을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', () => {
+    state.tabs.forEach(t => t.content = '');
+    save(); render();
+  });
+};
+
+// 환경 설정
+$('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
+$('fontSize').oninput = e => { state.settings.fontSize = e.target.value; save(); render(); };
+$('uiFontSize').oninput = e => { state.settings.uiFontSize = e.target.value; save(); render(); };
+$('lineSel').onchange = e => { state.settings.lineSpacing = e.target.value; save(); render(); };
+$('tabSize').oninput = e => { state.settings.tabFontSize = e.target.value; save(); render(); };
+
+// 접두사
+$('setPre').onclick = () => { $('preInput').value = state.prefix; $('preModal').classList.remove('hidden'); $('preModal').classList.add('flex'); };
+$('preCancel').onclick = () => $('preModal').classList.add('hidden');
+$('preOk').onclick = () => { state.prefix = $('preInput').value.trim(); $('preModal').classList.add('hidden'); save(); render(); };
+
+// 글꼴 추가
+$('addFontBtn').onclick = () => {
+  $('fontNameInput').value = ''; $('fontUrlInput').value = '';
+  $('fontModal').classList.remove('hidden'); $('fontModal').classList.add('flex');
+};
+$('fontCancel').onclick = () => $('fontModal').classList.add('hidden');
+$('fontOk').onclick = () => {
+  const name = $('fontNameInput').value.trim();
+  const url = $('fontUrlInput').value.trim();
+  if (!name || !url) return msg('오류', '글꼴 이름과 주소를 모두 입력해주세요.');
+  if (state.settings.customFonts.find(f => f.name === name)) return msg('오류', '이미 등록된 이름입니다.');
+  
+  state.settings.customFonts.push({ name, url: cleanUrl(url) });
+  loadCustomFont(name, url);
+  state.settings.fontFamily = name;
+  $('fontModal').classList.add('hidden');
+  save(); render();
+  msg('추가 완료', `'${name}' 글꼴이 적용되었습니다.`);
+};
+
+document.querySelectorAll('.preset-font-badge').forEach(btn => {
+  btn.onclick = () => {
+    $('fontNameInput').value = btn.dataset.name;
+    $('fontUrlInput').value = btn.dataset.url;
+  };
+});
+
+$('delFontBtn').onclick = () => {
+  const currentFont = state.settings.fontFamily;
+  customConfirm('글꼴 삭제', `'${currentFont}' 글꼴을 목록에서 삭제하시겠습니까?`, () => {
+    state.settings.customFonts = state.settings.customFonts.filter(f => f.name !== currentFont);
+    state.settings.fontFamily = 'Pretendard'; // 기본값 복귀
+    save(); render();
+  });
+};
+
+// 저장 (TXT)
+const downloadTxt = (filename, content) => {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+};
+
+$('txtCur').onclick = () => {
+  const act = state.tabs.find(t => t.id === state.activeId);
+  if (act) downloadTxt(`${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(act.title)}.txt`, act.content);
+};
+$('txtAll').onclick = () => {
+  const content = state.tabs.map(t => `====== ${t.title} ======\n\n${t.content}\n\n`).join('');
+  downloadTxt(`${state.prefix ? sanitize(state.prefix)+'-' : ''}전체통합.txt`, content);
+};
+$('txtEach').onclick = () => {
+  state.tabs.forEach((t, i) => {
+    setTimeout(() => downloadTxt(`${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(t.title)}.txt`, t.content), i * 300);
+  });
+};
+
+// 저장 (PDF)
+async function generatePDF(content, filename) {
+  $('pdfModal').classList.remove('hidden');
+  $('pdfModal').classList.add('flex');
+  $('pdfTxt').textContent = `${filename}\n문서를 생성하고 있습니다...`;
+
+  const container = document.createElement('div');
+  container.className = 'markdown-body p-10 bg-white text-gray-900';
+  container.style.fontFamily = state.settings.fontFamily;
+  container.style.fontSize = state.settings.fontSize + 'px';
+  container.style.lineHeight = state.settings.lineSpacing;
+  
+  try {
+    container.innerHTML = marked.parse(content || '내용 없음');
+  } catch(e) {
+    container.innerHTML = '<p>렌더링 오류</p>';
+  }
+
+  document.body.appendChild(container);
+
+  const opt = {
+    margin: 15,
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    await html2pdf().set(opt).from(container).save();
+  } catch (err) {
+    console.error(err);
+    alert('PDF 생성 중 오류가 발생했습니다.');
+  } finally {
+    document.body.removeChild(container);
+    $('pdfModal').classList.add('hidden');
+  }
+}
+
+$('pdfCur').onclick = async () => {
+  const act = state.tabs.find(t => t.id === state.activeId);
+  if (act) await generatePDF(act.content, `${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(act.title)}.pdf`);
+};
+
+$('pdfAll').onclick = async () => {
+  const combined = state.tabs.map(t => `# ${t.title}\n\n${t.content}\n\n---\n\n`).join('');
+  await generatePDF(combined, `${state.prefix ? sanitize(state.prefix)+'-' : ''}전체통합.pdf`);
+};
+
+$('pdfEach').onclick = async () => {
+  $('pdfModal').classList.remove('hidden');
+  $('pdfModal').classList.add('flex');
+  
+  for (let i = 0; i < state.tabs.length; i++) {
+    const t = state.tabs[i];
+    $('pdfTxt').textContent = `(${i+1}/${state.tabs.length})\n${t.title} PDF 생성 중...`;
+    
+    const container = document.createElement('div');
+    container.className = 'markdown-body p-10 bg-white text-gray-900';
+    container.style.fontFamily = state.settings.fontFamily;
+    container.style.fontSize = state.settings.fontSize + 'px';
+    container.style.lineHeight = state.settings.lineSpacing;
+    container.innerHTML = marked.parse(t.content || '내용 없음');
+    document.body.appendChild(container);
+
+    const opt = {
+      margin: 15,
+      filename: `${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(t.title)}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    await html2pdf().set(opt).from(container).save();
+    document.body.removeChild(container);
+  }
+  
+  $('pdfModal').classList.add('hidden');
+};
+
+// 프로젝트 백업/복구
+$('saveProjectBtn').onclick = () => {
+  const projectData = JSON.stringify({
+    prefix: state.prefix,
+    tabs: state.tabs,
+    settings: state.settings
+  }, null, 2);
+  const blob = new Blob([projectData], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `AI답변비교_백업_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+};
+
+$('loadProjectBtn').onclick = () => $('loadProjectInput').click();
+
+$('loadProjectInput').onchange = e => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = (evt) => {
+  reader.onload = e => {
     try {
-      const data = JSON.parse(evt.target.result);
+      const data = JSON.parse(e.target.result);
       if (data.tabs && Array.isArray(data.tabs)) {
-        state.tabs = data.tabs;
-        state.settings = data.settings || state.settings;
         state.prefix = data.prefix || '';
-        state.activeId = state.tabs[0]?.id || '';
-       
-        // 커스텀 폰트 복구 로직
-        if (state.settings.customFonts) {
+        state.tabs = data.tabs;
+        state.activeId = data.tabs[0]?.id || '';
+        if (data.settings) {
+          state.settings = { ...state.settings, ...data.settings };
           state.settings.customFonts.forEach(font => loadCustomFont(font.name, font.url));
         }
-       
-        save();
-        render();
-        msg('복구 완료', '선택하신 백업 파일의 내용을 성공적으로 불러왔습니다.');
+        save(); render();
+        msg('성공', '프로젝트를 성공적으로 불러왔습니다.');
       } else {
-        msg('형식 오류', '유효한 프로젝트 백업 파일이 아닙니다.');
+        msg('오류', '올바른 백업 파일 형식이 아닙니다.');
       }
-    } catch (err) {
-      console.error("파일 로드 에러:", err);
-      msg('오류 발생', '파일을 읽어오는 중 문제가 발생했습니다.');
+    } catch(err) {
+      msg('오류', '파일을 읽는 중 문제가 발생했습니다.');
     }
-    // 동일한 파일도 다시 불러올 수 있도록 input 초기화
     $('loadProjectInput').value = '';
   };
   reader.readAsText(file);
 };
 
-async function genPdf(title, tabsData, file) {
-  if (!window.html2pdf || !window.marked) { 
-    msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
-    return; 
-  }
- 
-  const origX = window.scrollX;
-  const origY = window.scrollY;
- 
-  const appDiv = document.getElementById('app');
-  const origDisplay = appDiv.style.display;
-  appDiv.style.display = 'none';
-  window.scrollTo(0, 0);
+// 모바일 뷰 토글
+$('btnView').onclick = () => {
+  const isMobile = document.body.style.maxWidth === '480px';
+  document.body.style.maxWidth = isMobile ? 'none' : '480px';
+  document.body.style.margin = isMobile ? '0' : '0 auto';
+  document.body.style.boxShadow = isMobile ? 'none' : '0 0 20px rgba(0,0,0,0.5)';
+  $('viewText').textContent = isMobile ? '모바일 가로보기' : '전체화면 복귀';
+  if (!isMobile) msg('미리보기', '모바일 기기에서의 가로 폭을 시뮬레이션합니다.');
+};
 
-  const safeTitle = esc(title);
-  const safePrefix = esc(state.prefix);
-
-  const pdfStyle = `
-    <style>
-      .pdf-box { padding:40px; font-family:'${state.settings.fontFamily}', sans-serif; font-size:${state.settings.fontSize}px; line-height:${state.settings.lineSpacing}; background:white; color:#1f2937; word-break:keep-all; overflow-wrap:break-word; }
-      .pdf-md p, .pdf-md li, .pdf-md blockquote, .pdf-md pre, .pdf-md tr, .pdf-md h1, .pdf-md h2, .pdf-md h3, .pdf-md figure { page-break-inside: avoid !important; break-inside: avoid !important; break-inside: avoid-page !important; }
-      .pdf-md h1{font-size:2em; font-weight:bold; margin:1.5rem 0 1rem; border-bottom:3px solid #111; padding-bottom:0.4rem;}
-      .pdf-md h2{font-size:1.6em; font-weight:bold; margin:1.2rem 0 0.8rem; border-bottom:1px solid #e5e7eb; padding-bottom:0.3rem;}
-      .pdf-md h3{font-size:1.3em; font-weight:bold; margin:1rem 0 0.6rem;}
-      .pdf-md p{margin-bottom:1rem;}
-      .pdf-md ul{list-style:disc; margin-left:1.5rem; margin-bottom:1rem;}
-      .pdf-md ol{list-style:decimal; margin-left:1.5rem; margin-bottom:1rem;}
-      .pdf-md blockquote { border-left: 4px solid #3b82f6 !important; padding: 12px 18px !important; background-color: #f8fafc !important; border-radius: 0 8px 8px 0 !important; margin: 1.2em 0 !important; }
-      .pdf-md blockquote p { margin-bottom: 0 !important; color: #374151 !important; font-weight: 500 !important; }
-      .pdf-md code { background-color: #f1f5f9 !important; color: #0f172a !important; padding: 2px 6px !important; border-radius: 6px !important; font-size: 0.9em !important; border: 1px solid #e2e8f0 !important; font-weight: 600 !important; }
-      .pdf-md pre{background:#1f2937; color:#f9fafb; padding:1rem; border-radius:8px; white-space:pre-wrap; word-break:break-all;}
-      .pdf-md table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; page-break-inside: auto; }
-      .pdf-md tr { page-break-inside: avoid !important; break-inside: avoid !important; }
-      .pdf-md th, .pdf-md td { border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-size: 0.9em; word-break: keep-all; }
-      .pdf-md th { background-color: #f1f5f9; font-weight: bold; }
-    </style>
-  `;
-
-  const opt = {
-    margin: 12, 
-    filename: sanitize(file),
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, useCORS: true, logging: false, scrollY: 0, scrollX: 0 }, 
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['css', 'legacy'] }
-  };
-
-  const printZone = document.createElement('div');
-  printZone.id = 'print-zone';
-  printZone.style.width = '800px';
-  printZone.style.margin = '0 auto';
-  printZone.style.backgroundColor = 'white';
-  printZone.style.padding = '20px';
-  document.body.appendChild(printZone);
-
-  try {
-    let worker = html2pdf().set(opt);
-    const wrappers = []; 
-
-    for (let i = 0; i < tabsData.length; i++) {
-      const tab = tabsData[i];
-      const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
-     
-      const htmlString = `
-        ${pdfStyle}
-        <div class="pdf-box">
-          ${i === 0 ? `
-          <div style="text-align:center; border-bottom:4px solid #1f2937; padding-bottom:1rem; margin-bottom:2rem">
-            <h1 style="font-size:28px; font-weight:800; margin:0; color:#111827">${safeTitle}</h1>
-            ${safePrefix ? `<p style="color:#6b7280; margin-top:8px">프로젝트 접두사: ${safePrefix}</p>` : ''}
-          </div>
-          ` : ''}
-          <div class="pdf-md">
-            ${tabsData.length > 1 ? `<h2 style="color:#2563eb;">[ ${esc(tab.title)} ]</h2><hr style="margin-bottom:1rem; border-color:#e5e7eb;"/>` : ''}
-            ${htmlContent}
-          </div>
-        </div>
-      `;
-
-      const wrapper = document.createElement('div');
-      wrapper.innerHTML = htmlString;
-      printZone.appendChild(wrapper); 
-      wrappers.push(wrapper);
-    }
-
-    await new Promise(r => setTimeout(r, 400));
-
-    for (let i = 0; i < wrappers.length; i++) {
-      if (i === 0) {
-        worker = worker.from(wrappers[i]).toPdf();
-      } else {
-        worker = worker.get('pdf').then(pdf => { pdf.addPage(); }).from(wrappers[i]).toContainer().toCanvas().toPdf();
-      }
-    }
-
-    await worker.save();
-
-  } catch (err) {
-    console.error(err);
-    msg('오류', 'PDF 파일 빌드 중 에러가 발생했습니다. 브라우저 메모리가 부족할 수 있습니다.');
-  } finally {
-    printZone.remove();
-    appDiv.style.display = origDisplay;
-    window.scrollTo(origX, origY);
-  }
-}
-
-function finishRename(newTitle) {
-  if (!newTitle.trim()) { cancelRename(); return; }
-  state.tabs = state.tabs.map(t => t.id === state.editingId ? { ...t, title: newTitle.trim() } : t);
-  state.editingId = null; save(); render();
-}
-
-function cancelRename() { state.editingId = null; render(); }
-
-document.addEventListener('click', e => {
-  const b = e.target.closest('.tabBtn'); 
-  if (b) { state.editingId = null; state.activeId = b.dataset.id; render(); return; }
-  if (e.target.id === 'addTab') {
-    state.editingId = null; const id = `tab-${Date.now()}`; state.tabs.push({id,title:'새 탭',content:''}); state.activeId = id; save(); render();
+// 단축키
+window.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.altKey) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); $('moveL').click(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); $('moveR').click(); }
   }
 });
 
-$('tabBar').addEventListener('dblclick', e => { 
-  const b = e.target.closest('.tabBtn'); 
-  if (!b) return; 
-  state.editingId = b.dataset.id; render();
-});
-
-$('editor').addEventListener('input', e => { 
-  state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: e.target.value } : t); save(); 
-  const charCount = e.target.value.replace(/\n+$/, '').length;
-  const charNoSpace = e.target.value.replace(/\s/g, '').length;
-  const wordCount = e.target.value.trim() ? e.target.value.trim().split(/\s+/).length : 0;
-  $('cnt').innerHTML = `글자수: <strong class="text-blue-600">${charCount}</strong> <span class="text-gray-400">(${charNoSpace})</span> | 단어수: <strong class="text-indigo-600">${wordCount}</strong>`;
-});
-
-$('fontSel').onchange = e => { state.settings.fontFamily = e.target.value; save(); render(); };
-$('lineSel').onchange = e => { state.settings.lineSpacing = parseFloat(e.target.value); save(); render(); };
-$('fontSize').oninput = e => { state.settings.fontSize = parseInt(e.target.value) || 16; save(); render(); };
-$('tabSize').oninput = e => { state.settings.tabFontSize = parseInt(e.target.value) || 14; save(); render(); };
-$('uiFontSize').oninput = e => { state.settings.uiFontSize = parseInt(e.target.value) || 16; save(); render(); };
-
-$('addFontBtn').onclick = () => {
-  $('fontNameInput').value = ''; $('fontUrlInput').value = '';
-  $('fontModal').classList.remove('hidden'); $('fontModal').classList.add('flex'); $('fontNameInput').focus();
-};
-
-$('fontCancel').onclick = () => { $('fontModal').classList.add('hidden'); $('fontModal').classList.remove('flex'); };
-
-document.querySelectorAll('.preset-font-badge').forEach(btn => {
-  btn.onclick = () => { $('fontNameInput').value = btn.dataset.name; $('fontUrlInput').value = cleanUrl(btn.dataset.url); };
-});
-
-$('fontOk').onclick = () => {
-  const fontName = $('fontNameInput').value.trim();
-  let fontUrl = cleanUrl($('fontUrlInput').value.trim());
-
-  if (!fontName) return msg('경고', '글꼴 이름을 입력해 주세요.');
-  if ([...STANDARD_FONTS, ...state.settings.customFonts.map(f => f.name)].includes(fontName)) return msg('경고', '이미 등록되어 있는 글꼴 이름입니다.');
-  if (fontUrl) loadCustomFont(fontName, fontUrl);
-
-  state.settings.customFonts.push({ name: fontName, url: fontUrl });
-  state.settings.fontFamily = fontName;
-  $('fontModal').classList.add('hidden'); $('fontModal').classList.remove('flex');
-
-  save(); setTimeout(render, 150);
-};
-
-$('delFontBtn').onclick = () => {
-  const curFont = state.settings.fontFamily;
-  customConfirm('글꼴 삭제', `등록하신 커스텀 글꼴 "${curFont}"을(를) 삭제하시겠습니까?`, () => {
-    state.settings.customFonts = state.settings.customFonts.filter(f => f.name !== curFont);
-    state.settings.fontFamily = "Pretendard"; save(); render();
-  });
-};
-
-$('moveL').onclick = () => { 
-  const i = state.tabs.findIndex(t => t.id === state.activeId); 
-  if (i > 0) { [state.tabs[i], state.tabs[i-1]] = [state.tabs[i-1], state.tabs[i]]; save(); render(); } 
-};
-$('moveR').onclick = () => { 
-  const i = state.tabs.findIndex(t => t.id === state.activeId); 
-  if (i < state.tabs.length - 1) { [state.tabs[i], state.tabs[i+1]] = [state.tabs[i+1], state.tabs[i]]; save(); render(); } 
-};
-
-$('rename').onclick = () => { state.editingId = state.activeId; render(); };
-
-$('delTab').onclick = () => { 
-  if (state.tabs.length <= 1) return msg('삭제 불가', '최소 1개 탭 유지'); 
-  customConfirm('탭 삭제', '정말 이 탭을 삭제하시겠습니까? (내용이 영구 삭제됩니다)', () => {
-    state.tabs = state.tabs.filter(t => t.id !== state.activeId); state.activeId = state.tabs[0]?.id || ''; save(); render(); 
-  });
-};
-
-$('previewBtn').onclick = () => { state.isPreview = !state.isPreview; render(); };
-$('btnView').onclick = () => { state.isMobile = !state.isMobile; render(); };
-$('setPre').onclick = () => { $('preInput').value = state.prefix; $('preModal').classList.remove('hidden'); $('preModal').classList.add('flex'); $('preInput').focus(); };
-$('preCancel').onclick = () => $('preModal').classList.add('hidden');
-$('preOk').onclick = () => { state.prefix = $('preInput').value.trim(); $('preModal').classList.add('hidden'); save(); render(); };
-$('msgOk').onclick = () => $('msgModal').classList.add('hidden');
-
-$('convertCodeBlocks').onclick = () => {
-  const activeTab = state.tabs.find(t => t.id === state.activeId);
-  if (!activeTab || !activeTab.content.trim()) return msg('알림', '변환을 진행할 텍스트가 현재 탭에 없습니다.');
-  if (!/```[\s\S]*?```/.test(activeTab.content)) return msg('알림', '본문에 백틱(```)으로 묶인 코드 블록 영역이 감지되지 않았습니다.');
-
-  const convertedText = activeTab.content.replace(/```[a-zA-Z0-9-]*\r?\n([\s\S]*?)```/g, (match, codeContent) => {
-    return codeContent.split(/\r?\n/).map(line => `> ${line}`).join('\n');
-  });
-  state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: convertedText } : t); save(); render();
-  msg('변환 완료', '본문 안의 코드 블록을 독자들이 읽기 편한 인용구 서식(>)으로 일괄 자동 변환했습니다!');
-};
-
-$('clearCur').onclick = () => { 
-  const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('알림', '이미 비어있음'); 
-  customConfirm('탭 내용 비우기', `"${a.title}" 탭의 내용을 모두 지우시겠습니까?`, () => {
-    state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: '' } : t); save(); render(); 
-  });
-};
-
-$('clearAll').onclick = () => { 
-  customConfirm('전체 내용 삭제', '🚨 모든 탭의 답변 내용이 영구 삭제되며 파일명 접두사도 초기화됩니다. 계속하시겠습니까?', () => {
-    state.tabs = state.tabs.map(t => ({ ...t, content: '' })); state.prefix = ''; save(); render(); msg('완료', '모든 대본과 접두사가 초기화되었습니다.'); 
-  });
-};
-
-$('txtCur').onclick = () => { 
-  const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('실패', '내용 없음'); dl(`${state.prefix ? state.prefix + '-' : ''}${a.title}.txt`, a.content); 
-};
-$('txtAll').onclick = () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('실패', '내용 없음'); dl(`${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.txt`, l.map(t => `========== [ ${t.title} ] ==========\n${t.content}`).join('\n\n')); 
-};
-$('txtEach').onclick = async () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('실패', '내용 없음'); 
-  for (const t of l) { dl(`${state.prefix ? state.prefix + '-' : ''}${t.title}.txt`, t.content); await new Promise(r => setTimeout(r, 400)); } 
-};
-
-$('pdfCur').onclick = async () => { 
-  const a = state.tabs.find(t => t.id === state.activeId); 
-  if (!a?.content.trim()) return msg('불가', '내용 없음'); 
-  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); $('pdfTxt').textContent = `"${a.title}" PDF 생성중`; 
-  if (!state.isPreview) { state.isPreview = true; render(); }
-  await new Promise(r => setTimeout(r, 400)); 
-  await genPdf(a.title, [{title: a.title, content: a.content}], `${state.prefix ? state.prefix + '-' : ''}${a.title}.pdf`); 
-  $('pdfModal').classList.add('hidden'); 
-};
-
-$('pdfAll').onclick = async () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('불가', '내용 없음'); 
-  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); $('pdfTxt').textContent = '통합 PDF 생성중\n(문서가 길 경우 분할 처리로 다소 시간이 소요됩니다)'; 
-  if (!state.isPreview) { state.isPreview = true; render(); }
-  await new Promise(r => setTimeout(r, 400)); 
-  await genPdf('AI 답변 비교 통합 문서', l, `${state.prefix ? state.prefix + '-' : ''}AI답변_통합본.pdf`); 
-  $('pdfModal').classList.add('hidden'); 
-};
-
-$('pdfEach').onclick = async () => { 
-  const l = state.tabs.filter(t => t.content.trim()); 
-  if (!l.length) return msg('불가', '내용 없음'); 
-  $('pdfModal').classList.remove('hidden'); $('pdfModal').classList.add('flex'); 
-  if (!state.isPreview) { state.isPreview = true; render(); }
-  for (let i = 0; i < l.length; i++) { 
-    $('pdfTxt').textContent = `개별 PDF 저장 중... (${i + 1}/${l.length})\n- ${l[i].title}`; 
-    await genPdf(l[i].title, [{title: l[i].title, content: l[i].content}], `${state.prefix ? state.prefix + '-' : ''}${l[i].title}.pdf`); 
-    await new Promise(r => setTimeout(r, 500)); 
-  } 
-  $('pdfModal').classList.add('hidden'); 
-};
-
-window.addEventListener('keydown', e => { 
-  if (e.ctrlKey && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { 
-    e.preventDefault(); 
-    const i = state.tabs.findIndex(t => t.id === state.activeId); 
-    if (i === -1) return; 
-    state.activeId = e.key === 'ArrowLeft' ? state.tabs[(i - 1 + state.tabs.length) % state.tabs.length].id : state.tabs[(i + 1) % state.tabs.length].id; render(); 
-  } 
-});
-
+// 초기화 실행
 render();
 </script>
 </body>
