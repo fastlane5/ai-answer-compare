@@ -625,15 +625,20 @@ async function spellCheck(text) {
     modelNames = ["gemini-2.5-flash-preview-09-2025"];
   } else {
     // Vercel (실제 배포) 환경: 선생님의 API 키를 사용하며, 막힐 경우를 대비해 여러 모델을 순차적으로 뚫고 들어갑니다.
-    activeKey = userKey || "";
+    activeKey = userKey?.trim() || "";
     if (!activeKey) {
       throw new Error("API 키가 없습니다.\n우측 상단의 [🔑] 열쇠 버튼을 눌러 무료 API 키를 등록해주세요.");
     }
+    
+    // 💡 [핵심 안전장치] 구글 API 키는 무조건 'AIza'로 시작합니다. 사용자가 잘못된 값을 넣었는지 사전에 100% 차단합니다.
+    if (!activeKey.startsWith("AIza")) {
+      throw new Error("입력하신 키가 올바른 구글 API 키 형식이 아닙니다.\n구글 API 키는 반드시 'AIza'로 시작해야 합니다.\n(현재 입력값: " + activeKey.substring(0, 10) + "...)\nGoogle AI Studio에서 키를 다시 복사해주세요.");
+    }
+    
     modelNames = [
-      "gemini-1.5-flash-latest", // 1순위: 최신 플래시 (가장 확실하게 열려있음)
-      "gemini-1.5-flash",        // 2순위: 기본 플래시
-      "gemini-1.5-pro-latest",   // 3순위: 최신 프로 모델
-      "gemini-pro"               // 4순위: 구형 프로 모델
+      "gemini-1.5-flash",        // 1순위: 기본 플래시 (가장 안정적)
+      "gemini-1.5-pro",          // 2순위: 프로 모델
+      "gemini-1.0-pro"           // 3순위: 구형 프로 모델 (기존 gemini-pro는 폐기되어 이름 변경됨)
     ];
   }
 
@@ -646,8 +651,8 @@ async function spellCheck(text) {
       systemInstruction: { parts: [{ text: "당신은 전문 교정자입니다. 제공된 텍스트의 맞춤법과 띄어쓰기를 문맥에 맞게 자연스럽게 교정하세요. 응답에는 어떠한 부연 설명이나 마크다운 코드 블록(```)도 절대 포함하지 말고, 오직 교정된 순수 텍스트 결과만 출력하세요." }] }
     };
 
-    // 구형(gemini-pro) 모델은 systemInstruction을 미지원하므로 프롬프트에 합칩니다.
-    if (modelName === "gemini-pro") {
+    // 구형(gemini-1.0-pro) 모델은 systemInstruction을 미지원하므로 프롬프트에 합칩니다.
+    if (modelName === "gemini-1.0-pro") {
       delete payload.systemInstruction;
       payload.contents[0].parts[0].text = "당신은 전문 교정자입니다. 다음 텍스트의 맞춤법과 띄어쓰기를 문맥에 맞게 자연스럽게 교정하세요. 부연 설명이나 기호 없이 교정된 결과만 출력하세요:\n\n" + text;
     }
@@ -688,7 +693,7 @@ async function spellCheck(text) {
       } catch (e) {
         lastErrorMsg = e.message;
         // 인증/권한 에러면 더 이상 다른 모델을 찾지 않고 즉시 중단
-        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없')) {
+        if (lastErrorMsg.includes('유효하지 않') || lastErrorMsg.includes('권한이 없') || lastErrorMsg.includes('AIza')) {
           throw new Error(lastErrorMsg);
         }
         // 모델이 막힌 거라면 다음 모델로 넘어가기 위해 break
@@ -719,7 +724,14 @@ $('apiKeyCancel').onclick = () => {
 };
 
 $('apiKeyOk').onclick = () => {
-  localStorage.setItem('user-gemini-key', $('apiKeyValue').value.trim());
+  const val = $('apiKeyValue').value.trim();
+  
+  // 💡 저장할 때도 진짜 API 키인지 한번 더 검사합니다.
+  if (val && !val.startsWith("AIza")) {
+    return msg('경고', "올바른 구글 API 키는 반드시 'AIza'로 시작해야 합니다.\n입력하신 값을 다시 한번 확인해주세요.");
+  }
+  
+  localStorage.setItem('user-gemini-key', val);
   $('apiKeyModal').classList.add('hidden');
   $('apiKeyModal').classList.remove('flex');
   
