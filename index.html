@@ -250,7 +250,7 @@
         <button id="convertCodeBlocks" class="px-2 py-1 text-indigo-600 border border-indigo-200 rounded bg-white hover:bg-indigo-50 font-medium flex items-center gap-1" title="본문 내 코드 블록(```)을 인용구(>)로 자동 변환">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>코드 ➡️ 인용구
         </button>
-        <!-- 💡 [신규] 맞춤법 교정 버튼 추가 -->
+        <!-- 맞춤법 교정 버튼 -->
         <button id="spellCheckBtn" class="px-2 py-1 text-emerald-600 border border-emerald-200 rounded bg-white hover:bg-emerald-50 font-medium flex items-center gap-1" title="AI를 활용하여 현재 탭의 맞춤법과 띄어쓰기를 교정합니다">
           <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>맞춤법 교정
         </button>
@@ -308,7 +308,7 @@
   </div>
 </div>
 
-<!-- 💡 [신규] AI 처리 중 상태 표시 모달 -->
+<!-- AI 처리 중 상태 표시 모달 -->
 <div id="aiModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex-col items-center justify-center z-[9999] p-4">
   <div class="bg-white p-6 rounded-2xl text-center max-w-sm w-full shadow-2xl">
     <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -588,7 +588,6 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 💡 [신규] 텍스트의 맞춤법과 띄어쓰기를 AI(Gemini API)를 사용하여 교정합니다.
 const apiKey = "";
 async function spellCheck(text) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -610,7 +609,6 @@ async function spellCheck(text) {
       const data = await res.json();
       let result = data.candidates?.[0]?.content?.parts?.[0]?.text || text;
       
-      // 혹시라도 AI가 말을 안 듣고 마크다운 블록을 넣었을 경우를 대비한 텍스트 정화 로직
       result = result.replace(/^```[\s\S]*?\n/g, '').replace(/```$/g, '').trim();
       return result;
     } catch (e) {
@@ -622,6 +620,7 @@ async function spellCheck(text) {
   return text;
 }
 
+// 💡 [수정됨] 기존 탭을 덮어쓰지 않고 새로운 '[교정됨]' 탭을 생성하여 결과를 보여줍니다.
 $('spellCheckBtn').onclick = async () => {
   const activeTab = state.tabs.find(t => t.id === state.activeId);
   if (!activeTab || !activeTab.content.trim()) {
@@ -633,10 +632,20 @@ $('spellCheckBtn').onclick = async () => {
   
   try {
     const correctedText = await spellCheck(activeTab.content);
-    state.tabs = state.tabs.map(t => t.id === state.activeId ? { ...t, content: correctedText } : t);
+    
+    // 원본 탭의 바로 오른쪽에 새 탭을 생성
+    const newId = `tab-${Date.now()}`;
+    const newTabTitle = `${activeTab.title} [교정됨]`;
+    const newTab = { id: newId, title: newTabTitle, content: correctedText };
+    
+    const currentIndex = state.tabs.findIndex(t => t.id === state.activeId);
+    state.tabs.splice(currentIndex + 1, 0, newTab);
+    
+    state.activeId = newId; // 새로 생성된 탭으로 즉시 이동
+    
     save();
     render();
-    msg('교정 완료', '맞춤법과 띄어쓰기가 성공적으로 교정되었습니다.');
+    msg('교정 완료', '새로운 탭에 맞춤법 교정 결과가 작성되었습니다.');
   } catch (err) {
     msg('오류', '맞춤법 교정 중 문제가 발생했습니다. 네트워크 상태를 확인해 주세요.');
   } finally {
