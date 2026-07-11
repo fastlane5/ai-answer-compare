@@ -562,17 +562,23 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 🚀 [백지 버그 최종 해결] 캔버스 한계 돌파 분할 렌더링 + 좌표 동기화
+// 💡 [궁극의 백지 해결 패치] 
+// 1. 앱을 잠깐 숨겨서 z-index 꼼수를 버리고 정석(In-flow) 배치합니다.
+// 2. DOM 렌더링이 100% 끝나고 캡처 체이닝이 제대로 묶이도록 보장합니다.
 async function genPdf(title, tabsData, file) {
   if (!window.html2pdf || !window.marked) { 
     msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
     return; 
   }
   
-  // 💡 [핵심 보정] 현재 스크롤 위치를 기록하고 화면을 맨 위로(0,0) 강제 이동시킵니다.
-  // 이 작업을 하지 않으면 스크롤을 내린 상태에서 렌더링 엔진이 화면 밖 빈공간(백지)만 캡처하게 됩니다.
+  // 현재 스크롤 위치 기록 및 초기화 (화면 밖 캡처 방지)
   const origX = window.scrollX;
   const origY = window.scrollY;
+  
+  // 메인 앱을 숨겨서 html2canvas 렌더링 간섭을 100% 차단합니다.
+  const appDiv = document.getElementById('app');
+  const origDisplay = appDiv.style.display;
+  appDiv.style.display = 'none';
   window.scrollTo(0, 0);
 
   const safeTitle = esc(title);
@@ -599,7 +605,6 @@ async function genPdf(title, tabsData, file) {
     </style>
   `;
 
-  // 💡 스크롤을 방지하고 항상 깨끗한 화면을 뜨기 위해 scrollY를 0으로 맞춥니다.
   const opt = {
     margin: 12, 
     filename: sanitize(file),
@@ -609,11 +614,19 @@ async function genPdf(title, tabsData, file) {
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
-  const wrappers = []; 
+  // 💡 인쇄 전용 영역을 정상 흐름(in-flow)으로 생성합니다.
+  const printZone = document.createElement('div');
+  printZone.id = 'print-zone';
+  printZone.style.width = '800px';
+  printZone.style.margin = '0 auto';
+  printZone.style.backgroundColor = 'white';
+  printZone.style.padding = '20px';
+  document.body.appendChild(printZone);
+
   try {
     let worker = html2pdf().set(opt);
+    const wrappers = []; 
 
-    // 1단계: 오류 방지를 위해 모든 탭의 렌더링용 가상 도화지를 안전한 영역에 순서대로 생성해둠
     for (let i = 0; i < tabsData.length; i++) {
       const tab = tabsData[i];
       const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
@@ -635,21 +648,15 @@ async function genPdf(title, tabsData, file) {
       `;
 
       const wrapper = document.createElement('div');
-      wrapper.style.position = 'absolute'; 
-      wrapper.style.left = '0'; 
-      wrapper.style.top = '0'; // 위쪽으로 완전히 밀착
-      wrapper.style.zIndex = '-9999'; // 사용자 화면 뒤쪽으로 숨김 처리
-      wrapper.style.width = '800px'; 
-      wrapper.style.backgroundColor = 'white'; 
       wrapper.innerHTML = htmlString;
-      document.body.appendChild(wrapper);
+      printZone.appendChild(wrapper); // 꼼수 없이 도화지 안으로 반듯하게 붙임
       wrappers.push(wrapper);
     }
 
-    // 💡 2단계: DOM 삽입 후 글꼴과 마크다운 렌더링이 100% 완료될 때까지 확실히 기다립니다. (가장 중요)
-    await new Promise(r => setTimeout(r, 300));
+    // 💡 화면 렌더링(글꼴, 레이아웃)이 100% 끝나길 확실하게 기다립니다.
+    await new Promise(r => setTimeout(r, 400));
 
-    // 💡 3단계: 체이닝(Chaining) 규칙을 완벽하게 적용
+    // 💡 체이닝 구조 완벽 결합
     for (let i = 0; i < wrappers.length; i++) {
       if (i === 0) {
         worker = worker.from(wrappers[i]).toPdf();
@@ -658,15 +665,15 @@ async function genPdf(title, tabsData, file) {
       }
     }
 
-    // 사진 캡처 및 저장이 완전히 끝날 때까지 대기합니다.
     await worker.save();
 
   } catch (err) {
     console.error(err);
     msg('오류', 'PDF 파일 빌드 중 에러가 발생했습니다. 브라우저 메모리가 부족할 수 있습니다.');
   } finally {
-    // 💡 4단계: 비동기 작업이 100% 끝났으므로 도화지들을 청소하고, 원래 보던 스크롤 위치로 원상복구합니다.
-    wrappers.forEach(w => w.remove());
+    // 💡 비동기 작업이 100% 끝나면 그제야 가상 도화지들 철거 및 화면 복구
+    printZone.remove();
+    appDiv.style.display = origDisplay;
     window.scrollTo(origX, origY);
   }
 }
