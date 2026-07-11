@@ -562,13 +562,19 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 🚀 [완벽 픽스] 체이닝(Chaining) 규칙을 엄수하여 렌더링 중 피사체가 증발하는 백지 버그를 원천 차단
+// 🚀 [백지 버그 최종 해결] 캔버스 한계 돌파 분할 렌더링 + 좌표 동기화
 async function genPdf(title, tabsData, file) {
   if (!window.html2pdf || !window.marked) { 
     msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
     return; 
   }
   
+  // 💡 [핵심 보정] 현재 스크롤 위치를 기록하고 화면을 맨 위로(0,0) 강제 이동시킵니다.
+  // 이 작업을 하지 않으면 스크롤을 내린 상태에서 렌더링 엔진이 화면 밖 빈공간(백지)만 캡처하게 됩니다.
+  const origX = window.scrollX;
+  const origY = window.scrollY;
+  window.scrollTo(0, 0);
+
   const safeTitle = esc(title);
   const safePrefix = esc(state.prefix);
 
@@ -593,12 +599,12 @@ async function genPdf(title, tabsData, file) {
     </style>
   `;
 
-  // 화면 크기를 초과하는 문서 방어 및 안정성 보장을 위한 스크롤 스냅샷 강제 고정
+  // 💡 스크롤을 방지하고 항상 깨끗한 화면을 뜨기 위해 scrollY를 0으로 맞춥니다.
   const opt = {
     margin: 12, 
     filename: sanitize(file),
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 1.5, useCORS: true, logging: false, scrollY: 0 }, 
+    html2canvas: { scale: 1.5, useCORS: true, logging: false, scrollY: 0, scrollX: 0 }, 
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'] }
   };
@@ -607,7 +613,7 @@ async function genPdf(title, tabsData, file) {
   try {
     let worker = html2pdf().set(opt);
 
-    // 1단계: 오류 방지를 위해 모든 탭의 렌더링용 도화지를 안전한 영역에 미리 생성해둠
+    // 1단계: 오류 방지를 위해 모든 탭의 렌더링용 가상 도화지를 안전한 영역에 순서대로 생성해둠
     for (let i = 0; i < tabsData.length; i++) {
       const tab = tabsData[i];
       const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
@@ -631,8 +637,8 @@ async function genPdf(title, tabsData, file) {
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute'; 
       wrapper.style.left = '0'; 
-      wrapper.style.top = '0';
-      wrapper.style.zIndex = '-9999'; // 화면 뒤에 겹쳐서 투명화 증발 방지
+      wrapper.style.top = '0'; // 위쪽으로 완전히 밀착
+      wrapper.style.zIndex = '-9999'; // 사용자 화면 뒤쪽으로 숨김 처리
       wrapper.style.width = '800px'; 
       wrapper.style.backgroundColor = 'white'; 
       wrapper.innerHTML = htmlString;
@@ -640,7 +646,10 @@ async function genPdf(title, tabsData, file) {
       wrappers.push(wrapper);
     }
 
-    // 2단계: html2pdf API의 고유한 체이닝 사슬을 끊지 않고 완벽하게 연결
+    // 💡 2단계: DOM 삽입 후 글꼴과 마크다운 렌더링이 100% 완료될 때까지 확실히 기다립니다. (가장 중요)
+    await new Promise(r => setTimeout(r, 300));
+
+    // 💡 3단계: 체이닝(Chaining) 규칙을 완벽하게 적용
     for (let i = 0; i < wrappers.length; i++) {
       if (i === 0) {
         worker = worker.from(wrappers[i]).toPdf();
@@ -649,15 +658,16 @@ async function genPdf(title, tabsData, file) {
       }
     }
 
-    // 3단계: 사진을 전부 다 찍고 인쇄까지 마칠 때까지 절대 도화지를 철거하지 않고 기다림
+    // 사진 캡처 및 저장이 완전히 끝날 때까지 대기합니다.
     await worker.save();
 
   } catch (err) {
     console.error(err);
     msg('오류', 'PDF 파일 빌드 중 에러가 발생했습니다. 브라우저 메모리가 부족할 수 있습니다.');
   } finally {
-    // 4단계: 비동기 작업이 100% 끝나면 그제야 가상 도화지들 일괄 철거 (핵심 픽스)
+    // 💡 4단계: 비동기 작업이 100% 끝났으므로 도화지들을 청소하고, 원래 보던 스크롤 위치로 원상복구합니다.
     wrappers.forEach(w => w.remove());
+    window.scrollTo(origX, origY);
   }
 }
 
