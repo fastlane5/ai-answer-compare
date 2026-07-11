@@ -562,7 +562,7 @@ function dl(name, content) {
   a.click(); a.remove(); URL.revokeObjectURL(u); 
 }
 
-// 🚀 백그라운드 초정밀 분할 렌더링(Chunking) PDF 엔진 - 수만 자 이상 초대형 문서 변환 시 빈 화면 오류 영구 해결
+// 🚀 [완벽 픽스] 체이닝(Chaining) 규칙을 엄수하여 렌더링 중 피사체가 증발하는 백지 버그를 원천 차단
 async function genPdf(title, tabsData, file) {
   if (!window.html2pdf || !window.marked) { 
     msg('오류', 'PDF 라이브러리를 준비하지 못했습니다. 새로고침을 해주세요.'); 
@@ -593,20 +593,21 @@ async function genPdf(title, tabsData, file) {
     </style>
   `;
 
+  // 화면 크기를 초과하는 문서 방어 및 안정성 보장을 위한 스크롤 스냅샷 강제 고정
   const opt = {
     margin: 12, 
     filename: sanitize(file),
     image: { type: 'jpeg', quality: 0.98 },
-    // 💡 스크롤 관련 버그 해결: 무조건 맨 위쪽을 기준으로 렌더링되도록 스크롤Y를 0으로 고정
     html2canvas: { scale: 1.5, useCORS: true, logging: false, scrollY: 0 }, 
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
+  const wrappers = []; 
   try {
     let worker = html2pdf().set(opt);
-    const wrappers = []; 
 
+    // 1단계: 오류 방지를 위해 모든 탭의 렌더링용 도화지를 안전한 영역에 미리 생성해둠
     for (let i = 0; i < tabsData.length; i++) {
       const tab = tabsData[i];
       const htmlContent = window.marked.parse(tab.content || '*내용 없음*');
@@ -629,37 +630,34 @@ async function genPdf(title, tabsData, file) {
 
       const wrapper = document.createElement('div');
       wrapper.style.position = 'absolute'; 
-      wrapper.style.left = '-9999px'; 
+      wrapper.style.left = '0'; 
       wrapper.style.top = '0';
+      wrapper.style.zIndex = '-9999'; // 화면 뒤에 겹쳐서 투명화 증발 방지
       wrapper.style.width = '800px'; 
       wrapper.style.backgroundColor = 'white'; 
       wrapper.innerHTML = htmlString;
       document.body.appendChild(wrapper);
       wrappers.push(wrapper);
-
-      // 💡 [핵심] await를 통해 이전 작업(html2canvas 캡처 등)이 100% 끝날 때까지 대기
-      // 이것 없이 동기 루프를 돌리면 .from()이 먼저 덮어씌워져서 빈 백지가 나옵니다.
-      if (i === 0) {
-        await worker.from(wrapper).toPdf();
-      } else {
-        await worker.get('pdf').then(pdf => { pdf.addPage(); }).from(wrapper).toContainer().toCanvas().toPdf();
-      }
-
-      // 비동기 큐 작업이 완료될 때까지 확실한 대기 지연장치 설정
-      await new Promise(resolve => {
-        worker.then(() => resolve());
-      });
     }
 
-    // 💡 모든 그리기와 인쇄 명령이 끝난 뒤에 비로소 저장
+    // 2단계: html2pdf API의 고유한 체이닝 사슬을 끊지 않고 완벽하게 연결
+    for (let i = 0; i < wrappers.length; i++) {
+      if (i === 0) {
+        worker = worker.from(wrappers[i]).toPdf();
+      } else {
+        worker = worker.get('pdf').then(pdf => { pdf.addPage(); }).from(wrappers[i]).toContainer().toCanvas().toPdf();
+      }
+    }
+
+    // 3단계: 사진을 전부 다 찍고 인쇄까지 마칠 때까지 절대 도화지를 철거하지 않고 기다림
     await worker.save();
-    
-    // 저장이 전부 완료된 안전한 타이밍에만 가상 도화지 일괄 철거
-    wrappers.forEach(w => w.remove());
 
   } catch (err) {
     console.error(err);
     msg('오류', 'PDF 파일 빌드 중 에러가 발생했습니다. 브라우저 메모리가 부족할 수 있습니다.');
+  } finally {
+    // 4단계: 비동기 작업이 100% 끝나면 그제야 가상 도화지들 일괄 철거 (핵심 픽스)
+    wrappers.forEach(w => w.remove());
   }
 }
 
