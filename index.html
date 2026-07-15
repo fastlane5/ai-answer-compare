@@ -33,7 +33,15 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  // jsdelivr 로드 실패 시 unpkg로 폴백 (둘 다 실패해도 앱은 정상 동작하며 아이콘만 미표시)
+  if (!window.lucide) {
+    document.write('<script src="https:\/\/unpkg.com\/lucide@latest\/dist\/umd\/lucide.min.js"><\/script>');
+  }
+</script>
+<!-- 💡 Google 드라이브 연동용 Google Identity Services 스크립트 -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <!-- 💡 5. 구형 서비스 워커 및 구형 캐시 강제 삭제 스크립트 -->
 <script>
@@ -180,6 +188,13 @@
           <i data-lucide="folder-open" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">열기</span>
         </button>
         <input type="file" id="loadProjectInput" accept=".json" class="hidden" />
+
+        <button id="driveBackupBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 text-xs font-bold transition shadow-sm" title="Google 드라이브 폴더에 프로젝트 백업">
+          <i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">드라이브 백업</span>
+        </button>
+        <button id="driveRestoreBtn" class="flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg border border-purple-200 text-xs font-bold transition shadow-sm" title="Google 드라이브의 백업 파일 목록에서 골라 복원">
+          <i data-lucide="cloud-download" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">드라이브 복원</span>
+        </button>
 
         <button id="btnView" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full border text-sm ml-2 transition shadow-sm">
           <i data-lucide="smartphone" class="w-4 h-4"></i>
@@ -348,10 +363,10 @@
     <div class="mb-4 bg-slate-50 p-3 rounded-lg border">
       <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">원클릭 명품 글꼴 추가</label>
       <div class="flex flex-wrap gap-1.5">
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="S-CoreDream-5Medium" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff)">에스코어드림 5</button>
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="KOTRA_HOPE" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/KOTRA_HOPE.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/KOTRA_HOPE.woff)">KOTRA 희망체</button>
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="Cafe24Anemone" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/Cafe24Anemone.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/Cafe24Anemone.woff)">카페24 아네모네</button>
-        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="TmonMonsori" data-url="[https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff](https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff)">티몬몬소리체</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="S-CoreDream-5Medium" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-5Medium.woff">에스코어드림 5</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="KOTRA_HOPE" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/KOTRA_HOPE.woff">KOTRA 희망체</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="Cafe24Anemone" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/Cafe24Anemone.woff">카페24 아네모네</button>
+        <button type="button" class="preset-font-badge px-2 py-1 bg-white hover:bg-blue-50 hover:text-blue-600 rounded text-xs border border-slate-200 shadow-sm transition" data-name="TmonMonsori" data-url="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff">티몬몬소리체</button>
       </div>
     </div>
 
@@ -362,13 +377,50 @@
       </div>
       <div>
         <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">CSS 주소 또는 woff/ttf 주소</label>
-        <input id="fontUrlInput" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="[https://cdn.jsdelivr.net/.../font.woff](https://cdn.jsdelivr.net/.../font.woff)">
+        <input id="fontUrlInput" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="https://cdn.jsdelivr.net/.../font.woff">
       </div>
     </div>
     <div class="flex gap-2">
       <button id="fontCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2.5 font-semibold text-gray-700 text-sm">취소</button>
       <button id="fontOk" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold text-sm">추가하기</button>
     </div>
+  </div>
+</div>
+
+<!-- 💡 Google 드라이브 연동 설정 모달 (최초 1회 OAuth 클라이언트 ID 등록) -->
+<div id="driveSetupModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5000] p-4">
+  <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
+    <h2 class="font-bold mb-1 text-lg text-gray-800">Google 드라이브 연동 설정</h2>
+    <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+      드라이브 백업/복원을 사용하려면 최초 1회 Google Cloud의 <b>OAuth 클라이언트 ID</b>(무료)가 필요합니다.<br><br>
+      ① <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-semibold">Google Cloud Console</a>에서 프로젝트 생성 후 <b>Google Drive API</b>를 '사용 설정'<br>
+      ② [사용자 인증 정보] → [OAuth 클라이언트 ID 만들기] → 유형: <b>웹 애플리케이션</b><br>
+      ③ [승인된 자바스크립트 원본]에 이 페이지의 주소를 등록<br>
+      &nbsp;&nbsp;&nbsp;(예: https://내사이트.vercel.app 또는 http://localhost:5500)<br>
+      ④ 발급된 클라이언트 ID를 아래에 붙여넣고 저장<br><br>
+      <span class="text-red-500 font-semibold">※ 파일을 더블클릭해 직접 연 경우(file://)에는 Google 정책상 동작하지 않으며, http(s) 주소로 접속한 상태여야 합니다.</span>
+    </p>
+    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">OAuth 클라이언트 ID</label>
+    <input id="driveClientIdInput" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="예: 1234567890-abc123.apps.googleusercontent.com">
+    <div class="flex gap-2">
+      <button id="driveSetupCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-2.5 font-semibold text-gray-700 text-sm">취소</button>
+      <button id="driveSetupOk" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold text-sm">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 💡 Google 드라이브 진행 상태 및 백업 파일 목록 모달 -->
+<div id="driveModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[4500] p-4">
+  <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+    <div class="flex items-center justify-between mb-2">
+      <h2 id="driveModalTitle" class="font-bold text-lg text-gray-800">Google 드라이브</h2>
+      <div class="flex items-center gap-1">
+        <button id="driveSettingsBtn" class="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded transition" title="연동 설정(클라이언트 ID) 변경"><i data-lucide="settings" class="w-4 h-4"></i></button>
+        <button id="driveModalClose" class="p-1.5 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded transition" title="닫기"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+    </div>
+    <p id="driveStatus" class="text-xs text-gray-600 mb-3 whitespace-pre-line"></p>
+    <div id="driveFileList" class="flex-1 overflow-y-auto custom-scrollbar space-y-1.5"></div>
   </div>
 </div>
 
@@ -490,6 +542,16 @@ try {
 }
 
 const $ = id => document.getElementById(id);
+
+// 💡 lucide 아이콘 안전 렌더링: CDN 로드 실패/지연 시에도 앱 전체가 멈추지 않도록 보호
+const refreshIcons = () => {
+  try {
+    if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+  } catch (e) { /* 아이콘 렌더링 실패는 무시 (기능에 영향 없음) */ }
+};
+// 스크립트가 늦게 로드된 경우를 대비해 페이지 로드 완료 시 한 번 더 렌더링
+window.addEventListener('load', refreshIcons);
+
 let timer = null; 
 const save = () => { 
   clearTimeout(timer); 
@@ -586,7 +648,7 @@ function render() {
       return `<div class="relative flex-shrink-0 group"><div class="flex items-center bg-white border-t border-l border-r rounded-t-lg mx-0.5 px-2 sm:px-3 py-1.5 sm:py-2 z-10 relative">
         <input id="renameInput" type="text" value="${esc(t.title)}" class="border border-blue-400 rounded px-2 py-0.5 sm:py-1 outline-none w-24 sm:w-32" style="font-size: ${state.settings.tabFontSize}px;" />
         <button id="saveRenameBtn" class="ml-1 text-green-600 hover:bg-green-50 p-1 rounded" onclick="finishRename('${t.id}')">
-          <svg class="w-3.5 h-3.5" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </button>
       </div></div>`;
     }
@@ -670,7 +732,7 @@ function render() {
   }
 
   updatePreviewBtn();
-  lucide.createIcons();
+  refreshIcons();
 }
 
 function updatePreviewBtn() {
@@ -899,26 +961,30 @@ $('txtEach').onclick = () => {
 };
 
 // 저장 (PDF)
-async function generatePDF(content, filename) {
-  $('pdfModal').classList.remove('hidden');
-  $('pdfModal').classList.add('flex');
-  $('pdfTxt').textContent = `${filename}\n문서를 생성하고 있습니다...`;
-
+// 💡 PDF 렌더링용 임시 컨테이너 생성 (화면 밖 배치로 flex 레이아웃 간섭 및 깜빡임 방지)
+function createPdfContainer(markdownText) {
   const container = document.createElement('div');
   container.className = 'markdown-body p-10 bg-white text-gray-900';
   container.style.fontFamily = state.settings.fontFamily;
   container.style.fontSize = state.settings.fontSize + 'px';
   container.style.lineHeight = state.settings.lineSpacing;
-  
+  container.style.width = '800px';
+  container.style.position = 'absolute';
+  container.style.left = '-10000px';
+  container.style.top = '0';
+
   try {
-    container.innerHTML = marked.parse(content || '내용 없음');
+    container.innerHTML = marked.parse(markdownText || '내용 없음');
   } catch(e) {
     container.innerHTML = '<p>렌더링 오류</p>';
   }
-
   document.body.appendChild(container);
+  return container;
+}
 
-  const opt = {
+// PDF 공통 옵션 생성
+function getPdfOptions(filename) {
+  return {
     margin: 15,
     filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
@@ -926,6 +992,15 @@ async function generatePDF(content, filename) {
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'], avoid: ['p', 'h1', 'h2', 'h3', 'pre', 'blockquote', 'table', 'tr', 'li', 'img'] }
   };
+}
+
+async function generatePDF(content, filename) {
+  $('pdfModal').classList.remove('hidden');
+  $('pdfModal').classList.add('flex');
+  $('pdfTxt').textContent = `${filename}\n문서를 생성하고 있습니다...`;
+
+  const container = createPdfContainer(content);
+  const opt = getPdfOptions(filename);
 
   try {
     await html2pdf().set(opt).from(container).save();
@@ -944,11 +1019,51 @@ $('pdfCur').onclick = async () => {
   await generatePDF(act.content, `${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(act.title)}.pdf`);
 };
 
+// 💡 [핵심 수정] 통합 PDF: 전체 내용을 하나의 거대한 캔버스로 그리면
+// 브라우저 캔버스 최대 크기 제한을 초과하여 빈(백지) PDF가 생성되는 문제가 있었음.
+// → 탭별로 캔버스를 나누어 렌더링한 뒤, 하나의 PDF 파일에 페이지를 이어붙이는 방식으로 변경.
+// (각 탭은 새 페이지에서 시작되며, 아무리 내용이 길어도 캔버스 제한에 걸리지 않음)
 $('pdfAll').onclick = async () => {
   const validTabs = state.tabs.filter(t => t.content.trim());
   if (validTabs.length === 0) return msg('알림', '저장할 내용이 없습니다.');
-  const combined = validTabs.map(t => `# ${t.title}\n\n${t.content}\n\n---\n\n`).join('');
-  await generatePDF(combined, `${state.prefix ? sanitize(state.prefix)+'-' : ''}전체통합.pdf`);
+
+  const filename = `${state.prefix ? sanitize(state.prefix)+'-' : ''}전체통합.pdf`;
+
+  $('pdfModal').classList.remove('hidden');
+  $('pdfModal').classList.add('flex');
+  $('pdfTxt').textContent = `(1/${validTabs.length})\n${validTabs[0].title} 변환 중...`;
+
+  // 탭별로 별도의 렌더링 컨테이너 생성 (제목을 H1으로 포함)
+  const containers = validTabs.map(t => createPdfContainer(`# ${t.title}\n\n${t.content}`));
+  const opt = getPdfOptions(filename);
+
+  try {
+    // 첫 번째 탭으로 PDF 생성 시작
+    let worker = html2pdf().set(opt).from(containers[0]).toPdf();
+
+    // 나머지 탭들을 순차적으로 새 페이지에 이어붙이기
+    for (let i = 1; i < containers.length; i++) {
+      const idx = i;
+      worker = worker
+        .get('pdf')
+        .then(pdf => {
+          pdf.addPage();
+          $('pdfTxt').textContent = `(${idx + 1}/${validTabs.length})\n${validTabs[idx].title} 변환 중...`;
+        })
+        .from(containers[idx])
+        .toContainer()
+        .toCanvas()
+        .toPdf();
+    }
+
+    await worker.save();
+  } catch (err) {
+    console.error(err);
+    msg('오류', '통합 PDF 생성 중 오류가 발생했습니다.\n' + (err && err.message ? err.message : ''));
+  } finally {
+    containers.forEach(c => { if (c.parentNode) c.parentNode.removeChild(c); });
+    $('pdfModal').classList.add('hidden');
+  }
 };
 
 $('pdfEach').onclick = async () => {
@@ -958,42 +1073,54 @@ $('pdfEach').onclick = async () => {
   $('pdfModal').classList.remove('hidden');
   $('pdfModal').classList.add('flex');
   
-  for (let i = 0; i < validTabs.length; i++) {
-    const t = validTabs[i];
-    $('pdfTxt').textContent = `(${i+1}/${validTabs.length})\n${t.title} PDF 생성 중...`;
-    
-    const container = document.createElement('div');
-    container.className = 'markdown-body p-10 bg-white text-gray-900';
-    container.style.fontFamily = state.settings.fontFamily;
-    container.style.fontSize = state.settings.fontSize + 'px';
-    container.style.lineHeight = state.settings.lineSpacing;
-    container.innerHTML = marked.parse(t.content || '내용 없음');
-    document.body.appendChild(container);
+  try {
+    for (let i = 0; i < validTabs.length; i++) {
+      const t = validTabs[i];
+      $('pdfTxt').textContent = `(${i+1}/${validTabs.length})\n${t.title} PDF 생성 중...`;
+      
+      const container = createPdfContainer(t.content);
+      const opt = getPdfOptions(`${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(t.title)}.pdf`);
 
-    const opt = {
-      margin: 15,
-      filename: `${state.prefix ? sanitize(state.prefix)+'-' : ''}${sanitize(t.title)}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['p', 'h1', 'h2', 'h3', 'pre', 'blockquote', 'table', 'tr', 'li', 'img'] }
-    };
-
-    await html2pdf().set(opt).from(container).save();
-    document.body.removeChild(container);
+      try {
+        await html2pdf().set(opt).from(container).save();
+      } finally {
+        document.body.removeChild(container);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    msg('오류', 'PDF 생성 중 오류가 발생했습니다.');
+  } finally {
+    $('pdfModal').classList.add('hidden');
   }
-  
-  $('pdfModal').classList.add('hidden');
 };
 
-// 프로젝트 백업/복구
-$('saveProjectBtn').onclick = () => {
-  const projectData = JSON.stringify({
+// === 프로젝트 데이터 공용 함수 (로컬/드라이브 백업·복원에서 함께 사용) ===
+function getProjectJSON() {
+  return JSON.stringify({
     prefix: state.prefix,
     tabs: state.tabs,
     settings: state.settings
   }, null, 2);
-  const blob = new Blob([projectData], { type: 'application/json' });
+}
+
+function applyProjectData(data) {
+  if (!data || !data.tabs || !Array.isArray(data.tabs)) return false;
+  state.prefix = data.prefix || '';
+  state.tabs = data.tabs;
+  state.activeId = data.tabs[0]?.id || '';
+  if (data.settings) {
+    state.settings = { ...state.settings, ...data.settings };
+    if (!state.settings.customFonts) state.settings.customFonts = [];
+    state.settings.customFonts.forEach(font => loadCustomFont(font.name, font.url));
+  }
+  save(); render();
+  return true;
+}
+
+// 프로젝트 백업/복구 (로컬 파일)
+$('saveProjectBtn').onclick = () => {
+  const blob = new Blob([getProjectJSON()], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `AI답변비교_백업_${new Date().toISOString().slice(0,10)}.json`;
@@ -1009,15 +1136,7 @@ $('loadProjectInput').onchange = e => {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.tabs && Array.isArray(data.tabs)) {
-        state.prefix = data.prefix || '';
-        state.tabs = data.tabs;
-        state.activeId = data.tabs[0]?.id || '';
-        if (data.settings) {
-          state.settings = { ...state.settings, ...data.settings };
-          state.settings.customFonts.forEach(font => loadCustomFont(font.name, font.url));
-        }
-        save(); render();
+      if (applyProjectData(data)) {
         msg('성공', '프로젝트를 성공적으로 불러왔습니다.');
       } else {
         msg('오류', '올바른 백업 파일 형식이 아닙니다.');
@@ -1029,6 +1148,245 @@ $('loadProjectInput').onchange = e => {
   };
   reader.readAsText(file);
 };
+
+// ============================================================
+// 💡 Google 드라이브 백업/복원 기능
+//  - 최초 1회 OAuth 클라이언트 ID 등록 필요 (설정 모달에서 안내)
+//  - 드라이브에 'AI답변비교_백업' 폴더를 자동 생성하여 그 안에 저장
+//  - 권한 범위(drive.file): 이 앱이 만든 파일에만 접근 (다른 드라이브 파일은 접근 불가)
+// ============================================================
+const GDRIVE_FOLDER_NAME = 'AI답변비교_백업';
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+let gdrive = {
+  clientId: localStorage.getItem('yt-script-gdrive-client') || '',
+  token: null,
+  tokenExp: 0
+};
+
+function gdriveEnsureScript() {
+  return new Promise((resolve, reject) => {
+    if (window.google && google.accounts && google.accounts.oauth2) return resolve();
+    const existing = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    const s = existing || document.createElement('script');
+    let waited = 0;
+    const check = setInterval(() => {
+      waited += 200;
+      if (window.google && google.accounts && google.accounts.oauth2) { clearInterval(check); resolve(); }
+      else if (waited >= 8000) { clearInterval(check); reject(new Error('Google 로그인 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.')); }
+    }, 200);
+    if (!existing) {
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onerror = () => { clearInterval(check); reject(new Error('Google 로그인 스크립트 로드 실패')); };
+      document.head.appendChild(s);
+    }
+  });
+}
+
+async function gdriveGetToken() {
+  // 유효한 토큰이 남아있으면 재사용 (만료 1분 전까지)
+  if (gdrive.token && Date.now() < gdrive.tokenExp - 60000) return gdrive.token;
+  await gdriveEnsureScript();
+  return new Promise((resolve, reject) => {
+    try {
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: gdrive.clientId,
+        scope: GDRIVE_SCOPE,
+        callback: resp => {
+          if (resp.error) return reject(new Error('인증 실패: ' + resp.error));
+          gdrive.token = resp.access_token;
+          gdrive.tokenExp = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+          resolve(gdrive.token);
+        },
+        error_callback: err => reject(new Error('로그인 창이 닫혔거나 차단되었습니다.'))
+      });
+      tokenClient.requestAccessToken({ prompt: '' });
+    } catch (e) { reject(e); }
+  });
+}
+
+async function gdriveApi(url, options = {}) {
+  const token = await gdriveGetToken();
+  const res = await fetch(url, {
+    ...options,
+    headers: { ...(options.headers || {}), Authorization: 'Bearer ' + token }
+  });
+  if (!res.ok) {
+    if (res.status === 401) { gdrive.token = null; } // 토큰 만료 시 다음 시도에서 재인증
+    throw new Error('Drive API 오류 (HTTP ' + res.status + ')');
+  }
+  return res;
+}
+
+// 백업 전용 폴더를 찾고, 없으면 새로 생성
+async function gdriveGetFolderId() {
+  const q = encodeURIComponent(`name='${GDRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const res = await gdriveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  const data = await res.json();
+  if (data.files && data.files.length > 0) return data.files[0].id;
+  const createRes = await gdriveApi('https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: GDRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  return (await createRes.json()).id;
+}
+
+// 백업 파일 업로드 (multipart)
+async function gdriveUpload(folderId, filename, content) {
+  const metadata = { name: filename, parents: [folderId], mimeType: 'application/json' };
+  const boundary = 'gdrive_boundary_' + Date.now();
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+    JSON.stringify(metadata) +
+    `\r\n--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+    content +
+    `\r\n--${boundary}--`;
+  await gdriveApi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body
+  });
+}
+
+// 폴더 내 백업 파일 목록 (최신 수정순)
+async function gdriveListBackups(folderId) {
+  const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+  const res = await gdriveApi(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=modifiedTime desc&fields=files(id,name,modifiedTime,size)&pageSize=100`);
+  return (await res.json()).files || [];
+}
+
+// 백업 파일 내용 다운로드
+async function gdriveDownload(fileId) {
+  const res = await gdriveApi(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+  return res.text();
+}
+
+function gdriveErrorText(err) {
+  const m = (err && err.message) ? err.message : String(err);
+  return m + '\n\n※ 확인사항\n· 브라우저 팝업 차단이 해제되어 있는지\n· OAuth 클라이언트 ID가 올바른지\n· 현재 페이지 주소가 Google Cloud의 [승인된 자바스크립트 원본]에 등록되어 있는지\n· http(s) 주소로 접속했는지 (file:// 직접 열기는 미지원)';
+}
+
+// === 드라이브 모달 열기/닫기/상태 표시 ===
+function openDriveModal(title) {
+  $('driveModalTitle').textContent = title;
+  $('driveStatus').textContent = '';
+  $('driveFileList').innerHTML = '';
+  $('driveModal').classList.remove('hidden');
+  $('driveModal').classList.add('flex');
+  refreshIcons();
+}
+function closeDriveModal() { $('driveModal').classList.add('hidden'); }
+function setDriveStatus(text) { $('driveStatus').textContent = text; }
+
+$('driveModalClose').onclick = closeDriveModal;
+$('driveSettingsBtn').onclick = () => { closeDriveModal(); openDriveSetup(); };
+
+// === 연동 설정 모달 (클라이언트 ID 등록) ===
+function openDriveSetup() {
+  $('driveClientIdInput').value = gdrive.clientId;
+  $('driveSetupModal').classList.remove('hidden');
+  $('driveSetupModal').classList.add('flex');
+}
+$('driveSetupCancel').onclick = () => $('driveSetupModal').classList.add('hidden');
+$('driveSetupOk').onclick = () => {
+  const v = $('driveClientIdInput').value.trim();
+  if (!v) return msg('오류', '클라이언트 ID를 입력해주세요.');
+  gdrive.clientId = v;
+  gdrive.token = null;
+  localStorage.setItem('yt-script-gdrive-client', v);
+  $('driveSetupModal').classList.add('hidden');
+  msg('저장 완료', '연동 설정이 저장되었습니다.\n이제 [드라이브 백업] / [드라이브 복원] 버튼을 사용할 수 있습니다.');
+};
+
+// === 드라이브 백업 실행 ===
+$('driveBackupBtn').onclick = async () => {
+  if (!gdrive.clientId) return openDriveSetup();
+  openDriveModal('Google 드라이브 백업');
+  try {
+    setDriveStatus('Google 계정 인증 중...\n(로그인 팝업이 뜨면 계정을 선택해주세요)');
+    await gdriveGetToken();
+    setDriveStatus(`'${GDRIVE_FOLDER_NAME}' 폴더 확인 중...`);
+    const folderId = await gdriveGetFolderId();
+
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const filename = `${state.prefix ? sanitize(state.prefix)+'-' : ''}백업_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}시${pad(now.getMinutes())}분${pad(now.getSeconds())}초.json`;
+
+    setDriveStatus('백업 파일 업로드 중...');
+    await gdriveUpload(folderId, filename, getProjectJSON());
+    closeDriveModal();
+    msg('백업 완료', `Google 드라이브의 '${GDRIVE_FOLDER_NAME}' 폴더에 저장되었습니다.\n\n파일명: ${filename}`);
+  } catch (err) {
+    console.error(err);
+    closeDriveModal();
+    msg('백업 실패', gdriveErrorText(err));
+  }
+};
+
+// === 드라이브 복원: 백업 목록에서 골라 복원 ===
+$('driveRestoreBtn').onclick = async () => {
+  if (!gdrive.clientId) return openDriveSetup();
+  openDriveModal('드라이브 백업 파일 복원');
+  try {
+    setDriveStatus('Google 계정 인증 중...\n(로그인 팝업이 뜨면 계정을 선택해주세요)');
+    await gdriveGetToken();
+    setDriveStatus('백업 목록 불러오는 중...');
+    const folderId = await gdriveGetFolderId();
+    const files = await gdriveListBackups(folderId);
+
+    if (files.length === 0) {
+      setDriveStatus('저장된 백업 파일이 없습니다.\n먼저 [드라이브 백업]을 실행해주세요.');
+      return;
+    }
+    setDriveStatus(`총 ${files.length}개의 백업이 있습니다. 복원할 파일을 선택하세요.`);
+    renderDriveFileList(files);
+  } catch (err) {
+    console.error(err);
+    closeDriveModal();
+    msg('복원 실패', gdriveErrorText(err));
+  }
+};
+
+function renderDriveFileList(files) {
+  const pad = n => String(n).padStart(2, '0');
+  $('driveFileList').innerHTML = files.map(f => {
+    const d = new Date(f.modifiedTime);
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const sizeKb = f.size ? (Math.round(f.size / 102.4) / 10) + ' KB' : '';
+    return `<button type="button" class="drive-file-item w-full text-left p-3 border rounded-lg hover:bg-purple-50 hover:border-purple-300 transition flex items-center justify-between gap-2" data-id="${f.id}" data-name="${esc(f.name)}">
+      <div class="min-w-0">
+        <div class="font-semibold text-sm text-gray-800 truncate">${esc(f.name)}</div>
+        <div class="text-xs text-gray-500 mt-0.5">수정: ${dateStr}${sizeKb ? ' · ' + sizeKb : ''}</div>
+      </div>
+      <i data-lucide="history" class="w-4 h-4 text-purple-500 flex-shrink-0"></i>
+    </button>`;
+  }).join('');
+  refreshIcons();
+
+  document.querySelectorAll('.drive-file-item').forEach(btn => {
+    btn.onclick = () => {
+      const fileId = btn.dataset.id;
+      const fileName = btn.dataset.name;
+      customConfirm('드라이브 복원', `'${fileName}'\n\n이 백업으로 복원하시겠습니까?\n현재 작업 내용은 덮어쓰기 됩니다.`, async () => {
+        try {
+          setDriveStatus('백업 파일 다운로드 중...');
+          const text = await gdriveDownload(fileId);
+          const data = JSON.parse(text);
+          if (applyProjectData(data)) {
+            closeDriveModal();
+            msg('복원 완료', `'${fileName}' 백업에서 프로젝트를 복원했습니다.`);
+          } else {
+            setDriveStatus('선택한 파일은 올바른 백업 형식이 아닙니다. 다른 파일을 선택해주세요.');
+          }
+        } catch (err) {
+          console.error(err);
+          setDriveStatus('복원 실패: ' + ((err && err.message) || err) + '\n다른 파일을 선택하거나 다시 시도해주세요.');
+        }
+      });
+    };
+  });
+}
 
 // 모바일 뷰 토글
 $('btnView').onclick = () => {
@@ -1047,6 +1405,7 @@ window.addEventListener('keydown', e => {
   const isConfirmOpen = !$('confirmModal').classList.contains('hidden');
   const isPreOpen = !$('preModal').classList.contains('hidden');
   const isFontOpen = !$('fontModal').classList.contains('hidden');
+  const isDriveSetupOpen = !$('driveSetupModal').classList.contains('hidden');
 
   // 안내 및 확인 모달: Enter와 Space바 모두 확인 처리
   if (isMsgOpen || isConfirmOpen) {
@@ -1058,12 +1417,13 @@ window.addEventListener('keydown', e => {
     }
   }
 
-  // 입력 모달(접두사, 폰트): 입력란 띄어쓰기 보호를 위해 Enter만 확인 처리
-  if (isPreOpen || isFontOpen) {
+  // 입력 모달(접두사, 폰트, 드라이브 설정): 입력란 띄어쓰기 보호를 위해 Enter만 확인 처리
+  if (isPreOpen || isFontOpen || isDriveSetupOpen) {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (isPreOpen) $('preOk').click();
       else if (isFontOpen) $('fontOk').click();
+      else if (isDriveSetupOpen) $('driveSetupOk').click();
       return;
     }
   }
