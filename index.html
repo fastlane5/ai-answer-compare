@@ -754,8 +754,12 @@ function render() {
     $('compareBtn').classList.add('bg-indigo-100', 'text-indigo-700', 'border-indigo-300');
     $('compareBtn').classList.remove('bg-white', 'text-gray-700');
     
-    // 셀렉트 박스 옵션 업데이트
-    $('compareTabSel').innerHTML = state.tabs.map(t => 
+    // 셀렉트 박스 옵션 업데이트 (📌 고정 메모는 비교 대상에서 제외)
+    const compareTabs = state.tabs.filter(t => t.id !== 'fixed-memo');
+    if ((!state.compareId || state.compareId === 'fixed-memo') && compareTabs.length > 0) {
+      state.compareId = (compareTabs.find(t => t.id !== state.activeId) || compareTabs[0]).id;
+    }
+    $('compareTabSel').innerHTML = compareTabs.map(t => 
       `<option value="${t.id}" ${state.compareId === t.id ? 'selected' : ''}>${esc(t.title)}</option>`
     ).join('');
 
@@ -879,9 +883,11 @@ $('editor').oninput = e => {
 // 💡 비교 모드 관련 이벤트 바인딩
 $('compareBtn').onclick = () => {
   state.isCompareMode = !state.isCompareMode;
-  if (state.isCompareMode && !state.compareId) {
-    const other = state.tabs.find(t => t.id !== state.activeId) || state.tabs[0];
-    state.compareId = other ? other.id : state.activeId;
+  if (state.isCompareMode && (!state.compareId || state.compareId === 'fixed-memo')) {
+    // 📌 고정 메모는 비교 대상에서 제외하고 기본값 선택
+    const candidates = state.tabs.filter(t => t.id !== 'fixed-memo');
+    const other = candidates.find(t => t.id !== state.activeId) || candidates[0];
+    state.compareId = other ? other.id : null;
   }
   render();
 };
@@ -1079,7 +1085,7 @@ function makeFooterImage(text) {
   canvas.height = Math.ceil(fontPx * 1.4);
   ctx = canvas.getContext('2d'); // 크기 변경 후 컨텍스트 재설정
   ctx.font = fontSpec;
-  ctx.fillStyle = '#9ca3af';
+  ctx.fillStyle = '#4b5563';
   ctx.textBaseline = 'top';
   ctx.fillText(text, 3, Math.round(fontPx * 0.15));
   return { dataUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height };
@@ -1087,13 +1093,18 @@ function makeFooterImage(text) {
 
 // 💡 완성된 PDF의 모든 페이지에 바닥글 삽입
 //    왼쪽 하단: 파일 이름 / 오른쪽 하단: 쪽번호 (현재쪽 / 전체쪽)
+//    바닥글 크기는 [탭 크기] 설정값과 동일하게 연동
 function addPdfFooters(pdf, filename) {
   const total = pdf.internal.getNumberOfPages();
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  const footerHmm = 3.4;      // 바닥글 글자 높이 (mm)
-  const footerY = pageH - 9;  // 페이지 아래에서 9mm 위치
-  const sideMargin = 15;      // 본문과 동일한 좌우 여백
+
+  // 탭 크기(화면 px) → PDF 실측(mm) 환산: 1px = 25.4/96 mm
+  const tabPx = Number(state.settings.tabFontSize) || 14;
+  const glyphMm = tabPx * 25.4 / 96;        // 글자 자체 높이(mm)
+  const footerHmm = glyphMm * 1.4;          // 캔버스 상하 여백 포함 이미지 높이(mm)
+  const footerY = pageH - footerHmm - 4;    // 페이지 맨 아래에서 4mm 위
+  const sideMargin = 15;                    // 본문과 동일한 좌우 여백
 
   // 파일 이름 이미지 (모든 페이지 공통이므로 1회만 생성)
   const fileImg = makeFooterImage(filename);
@@ -1104,7 +1115,7 @@ function addPdfFooters(pdf, filename) {
 
   for (let i = 1; i <= total; i++) {
     pdf.setPage(i);
-    pdf.addImage(fileImg.dataUrl, 'PNG', sideMargin, footerY, fileW, fileH);
+    pdf.addImage(fileImg.dataUrl, 'PNG', sideMargin, footerY + (footerHmm - fileH), fileW, fileH);
     const numImg = makeFooterImage(`${i} / ${total}`);
     const numW = footerHmm * numImg.w / numImg.h;
     pdf.addImage(numImg.dataUrl, 'PNG', pageW - sideMargin - numW, footerY, numW, footerHmm);
@@ -1417,8 +1428,26 @@ async function gdriveApi(url, options = {}) {
     headers: { ...(options.headers || {}), Authorization: 'Bearer ' + token }
   });
   if (!res.ok) {
-    if (res.status === 401) { gdrive.token = null; } // 토큰 만료 시 다음 시도에서 재인증
-    throw new Error('Drive API 오류 (HTTP ' + res.status + ')');
+    // 💡 Google이 보내는 실제 오류 내용을 읽어 원인별로 정확히 안내
+    let detail = '', reason = '';
+    try {
+      const j = await res.json();
+      if (j && j.error) {
+        detail = j.error.message || '';
+        reason = (j.error.errors && j.error.errors[0] && j.error.errors[0].reason) || j.error.status || '';
+      }
+    } catch (e) { /* 본문이 JSON이 아니면 무시 */ }
+
+    if (res.status === 401) { gdrive.token = null; } // 토큰 만료 → 다음 시도에서 재인증
+
+    if (res.status === 403 && (/has not been used|is disabled|SERVICE_DISABLED/i.test(detail) || /accessNotConfigured/i.test(reason))) {
+      throw new Error('Google Drive API가 프로젝트에서 [사용 설정]되지 않았습니다.\n\n▶ 해결 방법\n① Google Cloud Console → [API 및 서비스] → [라이브러리]\n② "Google Drive API" 검색 → [사용] 버튼 클릭\n③ 활성화 후 1~2분 뒤 다시 시도\n\n(Google 원문: ' + detail + ')');
+    }
+    if (res.status === 403 && (/insufficient/i.test(detail) || /insufficientPermissions|PERMISSION_DENIED/i.test(reason))) {
+      gdrive.token = null; // 권한 부족 → 재로그인 유도
+      throw new Error('드라이브 접근 권한이 부족합니다.\n\n▶ 해결: 버튼을 다시 눌러 로그인할 때, 권한 요청 화면에서 드라이브 관련 항목의 체크박스를 해제하지 말고 [계속/허용]을 눌러주세요.\n\n(Google 원문: ' + detail + ')');
+    }
+    throw new Error('Drive API 오류 (HTTP ' + res.status + (reason ? ' / ' + reason : '') + ')' + (detail ? '\n' + detail : ''));
   }
   return res;
 }
