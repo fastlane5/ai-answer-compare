@@ -30,6 +30,16 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding.css">
 
+<!-- 💡 Tailwind CDN의 개발용 안내 경고 숨김 (동작에 영향 없는 안내 문구) -->
+<script>
+  (function(){
+    const origWarn = console.warn;
+    console.warn = function(...args) {
+      if (typeof args[0] === 'string' && args[0].indexOf('cdn.tailwindcss.com') !== -1) return;
+      origWarn.apply(console, args);
+    };
+  })();
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -231,7 +241,7 @@
       </div>
     </div>
     <div class="hidden sm:block flex-1 text-right text-xs text-gray-400">
-      단축키: <kbd class="bg-gray-100 border p-0.5 rounded">Ctrl</kbd>+<kbd class="bg-gray-100 border p-0.5 rounded">Alt</kbd>+◀/▶
+      단축키: <kbd class="bg-gray-100 border p-0.5 rounded">Ctrl</kbd>+◀/▶ 탭 전환 · <kbd class="bg-gray-100 border p-0.5 rounded">Alt</kbd>+◀/▶ 순서 이동
     </div>
   </div>
 
@@ -330,7 +340,8 @@
   <div class="bg-white p-6 rounded-xl w-full max-w-sm text-center shadow-2xl">
     <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="alert-circle" class="w-6 h-6"></i></div>
     <h2 id="msgT" class="font-bold mb-2 text-lg text-gray-800"></h2>
-    <p id="msgM" class="text-gray-600 mb-6"></p>
+    <p id="msgM" class="text-gray-600 mb-4 whitespace-pre-line text-sm text-left"></p>
+    <a id="msgLink" href="#" target="_blank" rel="noopener noreferrer" class="hidden mb-3 bg-green-600 hover:bg-green-700 text-white w-full rounded-lg py-2.5 font-semibold block text-center"></a>
     <button id="msgOk" class="bg-blue-600 hover:bg-blue-700 text-white w-full rounded-lg py-2.5 font-semibold">닫기</button>
   </div>
 </div>
@@ -343,6 +354,20 @@
     <div class="flex gap-2">
       <button id="confirmCancel" class="w-1/3 bg-gray-200 hover:bg-gray-300 rounded-lg py-3 font-semibold text-gray-700 text-sm">취소</button>
       <button id="confirmOk" class="w-2/3 bg-red-600 hover:bg-red-700 text-white rounded-lg py-2.5 font-semibold text-sm">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 💡 복원 시 고정 메모 처리 선택 모달 -->
+<div id="memoChoiceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[5600] p-4">
+  <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+    <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="pin" class="w-6 h-6"></i></div>
+    <h2 class="font-bold mb-2 text-lg text-gray-800 text-center">고정 메모 처리</h2>
+    <p class="text-gray-600 mb-5 text-sm text-center whitespace-pre-line">현재 고정 메모와 불러온 백업의 고정 메모에\n모두 내용이 있습니다.\n어떻게 처리할까요?</p>
+    <div class="space-y-2">
+      <button id="memoAppend" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold text-sm">이어붙이기 (현재 메모 아래에 추가)</button>
+      <button id="memoOverwrite" class="w-full bg-red-500 hover:bg-red-600 text-white rounded-lg py-2.5 font-semibold text-sm">덮어쓰기 (백업의 메모로 교체)</button>
+      <button id="memoKeep" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg py-2.5 font-semibold text-sm">현재 메모 그대로 유지</button>
     </div>
   </div>
 </div>
@@ -395,10 +420,17 @@
       드라이브 백업/복원을 사용하려면 최초 1회 Google Cloud의 <b>OAuth 클라이언트 ID</b>(무료)가 필요합니다.<br><br>
       ① <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-semibold">Google Cloud Console</a>에서 프로젝트 생성 후 <b>Google Drive API</b>를 '사용 설정'<br>
       ② [사용자 인증 정보] → [OAuth 클라이언트 ID 만들기] → 유형: <b>웹 애플리케이션</b><br>
-      ③ [승인된 자바스크립트 원본]에 이 페이지의 주소를 등록<br>
-      &nbsp;&nbsp;&nbsp;(예: https://내사이트.vercel.app 또는 http://localhost:5500)<br>
-      ④ 발급된 클라이언트 ID를 아래에 붙여넣고 저장<br><br>
-      <span class="text-red-500 font-semibold">※ 파일을 더블클릭해 직접 연 경우(file://)에는 Google 정책상 동작하지 않으며, http(s) 주소로 접속한 상태여야 합니다.</span>
+      ③ [승인된 자바스크립트 원본]에 <b>아래 표시된 현재 페이지 주소</b>를 그대로 등록<br>
+      ④ 발급된 클라이언트 ID를 아래에 붙여넣고 저장<br>
+    </p>
+    <div class="mb-3 p-2.5 bg-slate-100 border border-slate-200 rounded-lg text-xs">
+      <div class="font-bold text-slate-500 text-[10px] uppercase mb-0.5">승인된 자바스크립트 원본에 등록할 주소</div>
+      <div id="driveOriginText" class="font-mono font-bold text-slate-800 break-all select-all">-</div>
+      <div class="text-[11px] text-slate-500 mt-1">포트 번호까지 포함해 위 주소를 그대로 등록하세요 (끝에 / 없음). 등록 후 반영까지 5분~수 시간 걸릴 수 있습니다.</div>
+    </div>
+    <p class="text-xs mb-4 leading-relaxed">
+      <span class="text-red-500 font-semibold">※ 파일을 더블클릭해 직접 연 경우(file://)에는 Google 정책상 동작하지 않으며, http(s) 주소로 접속한 상태여야 합니다.</span><br>
+      <span class="text-slate-500">※ OAuth 동의 화면이 '테스트' 모드라면 [대상] → [테스트 사용자]에 본인 Google 계정을 추가해야 로그인이 허용됩니다.</span>
     </p>
     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">OAuth 클라이언트 ID</label>
     <input id="driveClientIdInput" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4" placeholder="예: 1234567890-abc123.apps.googleusercontent.com">
@@ -541,6 +573,23 @@ try {
   state.activeId = state.tabs[0].id; 
 }
 
+// 💡 고정 메모 탭 보장: 항상 존재하며 반드시 맨 왼쪽(첫 번째)에 위치
+//  - 전체 삭제 시 내용 유지, 통합/개별 PDF 제외, 글자순 정렬 제외, 탭 삭제·이동 불가
+//  - 현재 PDF 저장과 현재 탭 비우기는 정상 작동
+function ensureFixedMemo() {
+  let memo = state.tabs.find(t => t.id === 'fixed-memo');
+  if (!memo) {
+    memo = { id: 'fixed-memo', title: '📌 고정 메모', content: '' };
+    state.tabs.unshift(memo);
+  } else if (state.tabs[0].id !== 'fixed-memo') {
+    state.tabs = [memo, ...state.tabs.filter(t => t.id !== 'fixed-memo')];
+  }
+  if (!state.activeId || !state.tabs.find(t => t.id === state.activeId)) {
+    state.activeId = state.tabs[0].id;
+  }
+}
+ensureFixedMemo();
+
 const $ = id => document.getElementById(id);
 
 // 💡 lucide 아이콘 안전 렌더링: CDN 로드 실패/지연 시에도 앱 전체가 멈추지 않도록 보호
@@ -562,9 +611,17 @@ const save = () => {
   }, 400); 
 };
 
-function msg(title, content) {
+function msg(title, content, linkUrl, linkText) {
   $('msgT').textContent = title;
   $('msgM').textContent = content;
+  const link = $('msgLink');
+  if (linkUrl) {
+    link.href = linkUrl;
+    link.textContent = linkText || '열기';
+    link.classList.remove('hidden');
+  } else {
+    link.classList.add('hidden');
+  }
   $('msgModal').classList.remove('hidden');
   $('msgModal').classList.add('flex');
 }
@@ -652,10 +709,13 @@ function render() {
         </button>
       </div></div>`;
     }
-    // 💡 핵심: 탭 항목에 style 속성으로 독립적인 글자 크기 주입
-    return `<div class="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap transition-all border-t border-l border-r mx-0.5 mt-1 rounded-t-lg select-none flex items-center gap-1.5 ${isA ? 'bg-white border-gray-200 font-bold text-blue-600 shadow-sm z-10 relative border-b-white transform translate-y-[1px]' : 'bg-gray-100/50 text-gray-500 border-transparent hover:bg-gray-200'}" onclick="selectTab('${t.id}')" style="font-size: ${state.settings.tabFontSize}px;">
+    // 💡 핵심: 탭 항목에 style 속성으로 독립적인 글자 크기 주입 (고정 메모 탭은 호박색으로 구분)
+    const isMemo = t.id === 'fixed-memo';
+    const inactiveCls = isMemo ? 'bg-amber-100/70 text-amber-700 border-amber-200 hover:bg-amber-200/70' : 'bg-gray-100/50 text-gray-500 border-transparent hover:bg-gray-200';
+    const activeCls = isMemo ? 'bg-white border-amber-300 font-bold text-amber-600 shadow-sm z-10 relative border-b-white transform translate-y-[1px]' : 'bg-white border-gray-200 font-bold text-blue-600 shadow-sm z-10 relative border-b-white transform translate-y-[1px]';
+    return `<div class="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap transition-all border-t border-l border-r mx-0.5 mt-1 rounded-t-lg select-none flex items-center gap-1.5 ${isA ? activeCls : inactiveCls}" onclick="selectTab('${t.id}')" style="font-size: ${state.settings.tabFontSize}px;">
         ${esc(t.title)}
-        ${isA ? '<div class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_4px_rgba(59,130,246,0.6)]"></div>' : ''}
+        ${isA ? `<div class="w-1.5 h-1.5 rounded-full ${isMemo ? 'bg-amber-500 shadow-[0_0_4px_rgba(245,158,11,0.6)]' : 'bg-blue-500 shadow-[0_0_4px_rgba(59,130,246,0.6)]'}"></div>` : ''}
     </div>`;
   }).join('') + `<button onclick="addTab()" class="ml-2 px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-600 mb-1 text-xs"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>`;
 
@@ -769,6 +829,7 @@ $('rename').onclick = () => {
 };
 
 $('delTab').onclick = () => {
+  if (state.activeId === 'fixed-memo') return msg('삭제 불가', '고정 메모 탭은 삭제할 수 없습니다.\n내용을 지우려면 [현재 탭 비우기]를 사용하세요.');
   if (state.tabs.length <= 1) return msg('삭제 불가', '최소 1개의 탭은 유지해야 합니다.');
   customConfirm('탭 삭제', '현재 탭을 삭제하시겠습니까?\n삭제된 내용은 복구할 수 없습니다.', () => {
     const idx = state.tabs.findIndex(t => t.id === state.activeId);
@@ -786,13 +847,16 @@ $('delTab').onclick = () => {
 
 $('moveL').onclick = () => {
   const i = state.tabs.findIndex(t => t.id === state.activeId);
-  if (i > 0) {
+  // 고정 메모 탭은 이동 불가, 다른 탭도 고정 메모 자리(맨 앞)로는 이동 불가
+  if (state.activeId === 'fixed-memo') return msg('이동 불가', '고정 메모 탭은 항상 맨 왼쪽에 고정됩니다.');
+  if (i > 0 && state.tabs[i-1].id !== 'fixed-memo') {
     [state.tabs[i-1], state.tabs[i]] = [state.tabs[i], state.tabs[i-1]];
     save(); render();
   }
 };
 $('moveR').onclick = () => {
   const i = state.tabs.findIndex(t => t.id === state.activeId);
+  if (state.activeId === 'fixed-memo') return msg('이동 불가', '고정 메모 탭은 항상 맨 왼쪽에 고정됩니다.');
   if (i < state.tabs.length - 1) {
     [state.tabs[i], state.tabs[i+1]] = [state.tabs[i+1], state.tabs[i]];
     save(); render();
@@ -878,8 +942,8 @@ $('clearCur').onclick = () => {
 };
 
 $('clearAll').onclick = () => {
-  customConfirm('전체 삭제', '모든 탭의 내용을 완전히 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', () => {
-    state.tabs.forEach(t => t.content = '');
+  customConfirm('전체 삭제', '모든 탭의 내용을 완전히 삭제하시겠습니까?\n(📌 고정 메모 탭의 내용은 보존됩니다)\n이 작업은 되돌릴 수 없습니다.', () => {
+    state.tabs.forEach(t => { if (t.id !== 'fixed-memo') t.content = ''; });
     save(); render();
   });
 };
@@ -1038,7 +1102,8 @@ $('pdfCur').onclick = async () => {
 // → 탭별로 캔버스를 나누어 렌더링한 뒤, 하나의 PDF 파일에 페이지를 이어붙이는 방식으로 변경.
 // (각 탭은 새 페이지에서 시작되며, 아무리 내용이 길어도 캔버스 제한에 걸리지 않음)
 $('pdfAll').onclick = async () => {
-  const validTabs = state.tabs.filter(t => t.content.trim());
+  // 📌 고정 메모 탭은 통합 PDF에서 제외
+  const validTabs = state.tabs.filter(t => t.id !== 'fixed-memo' && t.content.trim());
   if (validTabs.length === 0) return msg('알림', '저장할 내용이 없습니다.');
 
   const filename = `${state.prefix ? sanitize(state.prefix)+'-' : ''}전체통합.pdf`;
@@ -1081,7 +1146,8 @@ $('pdfAll').onclick = async () => {
 };
 
 $('pdfEach').onclick = async () => {
-  const validTabs = state.tabs.filter(t => t.content.trim());
+  // 📌 고정 메모 탭은 개별 PDF에서 제외
+  const validTabs = state.tabs.filter(t => t.id !== 'fixed-memo' && t.content.trim());
   if (validTabs.length === 0) return msg('알림', '저장할 내용이 없습니다.');
 
   $('pdfModal').classList.remove('hidden');
@@ -1120,17 +1186,68 @@ function getProjectJSON() {
 
 function applyProjectData(data) {
   if (!data || !data.tabs || !Array.isArray(data.tabs)) return false;
+
+  // 💡 복원 전 현재 고정 메모 내용을 보존
+  const currentMemo = state.tabs.find(t => t.id === 'fixed-memo');
+  const currentMemoContent = currentMemo ? currentMemo.content : '';
+  const currentMemoTitle = currentMemo ? currentMemo.title : '';
+
+  // 백업 파일 안의 고정 메모는 분리해두고, 나머지 탭만 교체
+  const incomingMemo = data.tabs.find(t => t.id === 'fixed-memo');
+  const incomingMemoContent = incomingMemo ? (incomingMemo.content || '') : '';
+
   state.prefix = data.prefix || '';
-  state.tabs = data.tabs;
-  state.activeId = data.tabs[0]?.id || '';
+  state.tabs = data.tabs.filter(t => t.id !== 'fixed-memo');
   if (data.settings) {
     state.settings = { ...state.settings, ...data.settings };
     if (!state.settings.customFonts) state.settings.customFonts = [];
     state.settings.customFonts.forEach(font => loadCustomFont(font.name, font.url));
   }
+
+  ensureFixedMemo(); // 고정 메모 탭을 맨 앞에 재생성
+  const memo = state.tabs.find(t => t.id === 'fixed-memo');
+  memo.content = currentMemoContent; // 기본: 기존 메모 그대로 유지
+  if (currentMemoTitle) memo.title = currentMemoTitle;
+
+  state.activeId = state.tabs[0]?.id || '';
   save(); render();
+
+  // 💡 백업 파일의 고정 메모에 내용이 있는 경우 처리
+  if (incomingMemoContent.trim()) {
+    if (!currentMemoContent.trim()) {
+      // 현재 메모가 비어있으면 백업의 메모를 그대로 사용
+      memo.content = incomingMemoContent;
+      save(); render();
+    } else if (incomingMemoContent.trim() !== currentMemoContent.trim()) {
+      // 양쪽 모두 내용이 있고 서로 다르면 → 사용자에게 선택 요청
+      askMemoChoice(incomingMemoContent);
+    }
+  }
   return true;
 }
+
+// 고정 메모 덮어쓰기/이어붙이기/유지 선택
+let memoChoiceIncoming = '';
+function askMemoChoice(incomingContent) {
+  memoChoiceIncoming = incomingContent;
+  $('memoChoiceModal').classList.remove('hidden');
+  $('memoChoiceModal').classList.add('flex');
+  refreshIcons();
+}
+function resolveMemoChoice(mode) {
+  const memo = state.tabs.find(t => t.id === 'fixed-memo');
+  if (memo) {
+    if (mode === 'overwrite') memo.content = memoChoiceIncoming;
+    else if (mode === 'append') memo.content = memo.content.replace(/\n+$/, '') + '\n\n----- (백업에서 이어붙임) -----\n\n' + memoChoiceIncoming;
+    // 'keep'은 아무것도 하지 않음
+  }
+  memoChoiceIncoming = '';
+  $('memoChoiceModal').classList.add('hidden');
+  save(); render();
+}
+$('memoOverwrite').onclick = () => resolveMemoChoice('overwrite');
+$('memoAppend').onclick = () => resolveMemoChoice('append');
+$('memoKeep').onclick = () => resolveMemoChoice('keep');
 
 // 프로젝트 백업/복구 (로컬 파일)
 $('saveProjectBtn').onclick = () => {
@@ -1178,6 +1295,17 @@ let gdrive = {
   tokenExp: 0
 };
 
+// 💡 드라이브 기능 사용 가능 환경인지 검사 (문제가 있으면 안내문 반환, 정상이면 빈 문자열)
+function driveEnvBlocked() {
+  if (location.protocol === 'file:') {
+    return '파일을 직접 연 상태(file://)에서는 Google 정책상 드라이브 기능이 동작하지 않습니다.\nvercel 등 https 주소나 localhost 서버로 접속한 뒤 사용해주세요.';
+  }
+  if (!location.origin || location.origin === 'null') {
+    return '현재 페이지가 미리보기/샌드박스 환경(앱 내 미리보기, 파일 뷰어 등)에서 실행되고 있어 Google 로그인이 불가능합니다.\n\n▶ 해결: 이 HTML을 vercel 등에 배포한 주소, 또는 localhost 서버 주소로 브라우저 새 탭에서 직접 열어 사용해주세요.';
+  }
+  return '';
+}
+
 function gdriveEnsureScript() {
   return new Promise((resolve, reject) => {
     if (window.google && google.accounts && google.accounts.oauth2) return resolve();
@@ -1187,7 +1315,7 @@ function gdriveEnsureScript() {
     const check = setInterval(() => {
       waited += 200;
       if (window.google && google.accounts && google.accounts.oauth2) { clearInterval(check); resolve(); }
-      else if (waited >= 8000) { clearInterval(check); reject(new Error('Google 로그인 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.')); }
+      else if (waited >= 8000) { clearInterval(check); reject(new Error('Google 로그인 스크립트를 불러오지 못했습니다.\n\n▶ 가능한 원인\n· 인터넷 연결 문제\n· 광고 차단 확장 프로그램 또는 보안 프로그램이 accounts.google.com을 차단\n· 미리보기/샌드박스 환경에서 실행 중 (브라우저 새 탭에서 직접 열어주세요)')); }
     }, 200);
     if (!existing) {
       s.src = 'https://accounts.google.com/gsi/client';
@@ -1207,12 +1335,27 @@ async function gdriveGetToken() {
         client_id: gdrive.clientId,
         scope: GDRIVE_SCOPE,
         callback: resp => {
-          if (resp.error) return reject(new Error('인증 실패: ' + resp.error));
+          if (resp.error) {
+            if (resp.error === 'access_denied') {
+              return reject(new Error('접근이 거부되었습니다.\n\n▶ OAuth 동의 화면이 \'테스트\' 모드라면: Google Cloud Console → [OAuth 동의 화면(대상)] → [테스트 사용자]에 지금 로그인한 Google 계정을 추가한 뒤 다시 시도해주세요.\n▶ 권한 요청 화면에서 [허용]을 눌러야 백업/복원이 가능합니다.'));
+            }
+            return reject(new Error('인증 실패: ' + resp.error));
+          }
           gdrive.token = resp.access_token;
           gdrive.tokenExp = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
           resolve(gdrive.token);
         },
-        error_callback: err => reject(new Error('로그인 창이 닫혔거나 차단되었습니다.'))
+        error_callback: err => {
+          // 💡 오류 원인별로 구분하여 정확한 해결 방법 안내
+          const t = (err && err.type) ? err.type : '';
+          if (t === 'popup_failed_to_open') {
+            reject(new Error('로그인 팝업이 열리지 못했습니다 (팝업 차단).\n\n▶ 해결: 주소창 오른쪽의 팝업 차단 아이콘을 눌러 [항상 허용]을 선택한 뒤, 버튼을 다시 눌러주세요.\n▶ 페이지를 연 직후 첫 클릭은 Google 스크립트 로딩 때문에 실패할 수 있습니다. 이 경우 한 번 더 눌러주세요.'));
+          } else if (t === 'popup_closed') {
+            reject(new Error('로그인 창이 완료되기 전에 닫혔습니다.\n\n▶ 팝업 안에 "400: origin_mismatch" 등 오류 페이지가 표시되었다면, 현재 페이지 주소가 Google Cloud의 [승인된 자바스크립트 원본]에 등록되지 않은 것입니다. 주소를 정확히(포트 번호 포함, 끝에 / 없이) 등록해주세요.\n▶ 실수로 창을 닫으셨다면 버튼을 다시 눌러주세요.'));
+          } else {
+            reject(new Error('로그인 오류 (' + (t || '알 수 없음') + ')'));
+          }
+        }
       });
       tokenClient.requestAccessToken({ prompt: '' });
     } catch (e) { reject(e); }
@@ -1278,7 +1421,8 @@ async function gdriveDownload(fileId) {
 
 function gdriveErrorText(err) {
   const m = (err && err.message) ? err.message : String(err);
-  return m + '\n\n※ 확인사항\n· 브라우저 팝업 차단이 해제되어 있는지\n· OAuth 클라이언트 ID가 올바른지\n· 현재 페이지 주소가 Google Cloud의 [승인된 자바스크립트 원본]에 등록되어 있는지\n· http(s) 주소로 접속했는지 (file:// 직접 열기는 미지원)';
+  const origin = (location.protocol === 'file:') ? '(file:// — 사용 불가)' : location.origin;
+  return m + '\n\n※ 확인사항\n· 브라우저 팝업 차단이 해제되어 있는지\n· OAuth 클라이언트 ID가 올바른지\n· [승인된 자바스크립트 원본]에 아래 주소가 정확히 등록되어 있는지\n   → ' + origin + '\n· OAuth 동의 화면이 테스트 모드라면 [테스트 사용자]에 본인 계정이 추가되어 있는지\n· http(s) 주소로 접속했는지 (file:// 직접 열기는 미지원)';
 }
 
 // === 드라이브 모달 열기/닫기/상태 표시 ===
@@ -1299,6 +1443,11 @@ $('driveSettingsBtn').onclick = () => { closeDriveModal(); openDriveSetup(); };
 // === 연동 설정 모달 (클라이언트 ID 등록) ===
 function openDriveSetup() {
   $('driveClientIdInput').value = gdrive.clientId;
+  // 💡 Google Cloud에 등록해야 할 정확한 주소(origin)를 자동으로 표시
+  const envErr = driveEnvBlocked();
+  $('driveOriginText').textContent = envErr
+    ? '(현재 환경에서는 사용 불가 — 브라우저 새 탭에서 http(s) 주소로 열어주세요)'
+    : location.origin;
   $('driveSetupModal').classList.remove('hidden');
   $('driveSetupModal').classList.add('flex');
 }
@@ -1315,10 +1464,15 @@ $('driveSetupOk').onclick = () => {
 
 // === 드라이브 백업 실행 ===
 $('driveBackupBtn').onclick = async () => {
+  const envErr = driveEnvBlocked();
+  if (envErr) return msg('실행 환경 안내', envErr);
   if (!gdrive.clientId) return openDriveSetup();
   openDriveModal('Google 드라이브 백업');
   try {
-    setDriveStatus('Google 계정 인증 중...\n(로그인 팝업이 뜨면 계정을 선택해주세요)');
+    // 스크립트가 아직 로딩 중이면 준비될 때까지 대기 (팝업 차단 확률 감소)
+    setDriveStatus('Google 연결 준비 중...');
+    await gdriveEnsureScript();
+    setDriveStatus('Google 계정 인증 중...\n(로그인 팝업이 뜨면 계정을 선택해주세요.\n팝업이 안 뜨면 주소창의 팝업 차단을 허용한 뒤 다시 시도해주세요)');
     await gdriveGetToken();
     setDriveStatus(`'${GDRIVE_FOLDER_NAME}' 폴더 확인 중...`);
     const folderId = await gdriveGetFolderId();
@@ -1330,7 +1484,10 @@ $('driveBackupBtn').onclick = async () => {
     setDriveStatus('백업 파일 업로드 중...');
     await gdriveUpload(folderId, filename, getProjectJSON());
     closeDriveModal();
-    msg('백업 완료', `Google 드라이브의 '${GDRIVE_FOLDER_NAME}' 폴더에 저장되었습니다.\n\n파일명: ${filename}`);
+    msg('백업 완료',
+      `로그인 팝업에서 선택한 계정의 [내 드라이브] → '${GDRIVE_FOLDER_NAME}' 폴더에 저장되었습니다.\n\n파일명: ${filename}\n\n※ 폴더가 안 보인다면 드라이브에 다른 계정으로 로그인되어 있지 않은지 확인해주세요. 아래 버튼으로 폴더를 바로 확인할 수 있습니다.`,
+      `https://drive.google.com/drive/folders/${folderId}`,
+      '드라이브에서 폴더 열기');
   } catch (err) {
     console.error(err);
     closeDriveModal();
@@ -1340,10 +1497,14 @@ $('driveBackupBtn').onclick = async () => {
 
 // === 드라이브 복원: 백업 목록에서 골라 복원 ===
 $('driveRestoreBtn').onclick = async () => {
+  const envErr = driveEnvBlocked();
+  if (envErr) return msg('실행 환경 안내', envErr);
   if (!gdrive.clientId) return openDriveSetup();
   openDriveModal('드라이브 백업 파일 복원');
   try {
-    setDriveStatus('Google 계정 인증 중...\n(로그인 팝업이 뜨면 계정을 선택해주세요)');
+    setDriveStatus('Google 연결 준비 중...');
+    await gdriveEnsureScript();
+    setDriveStatus('Google 계정 인증 중...\n(로그인 팝업이 뜨면 계정을 선택해주세요.\n팝업이 안 뜨면 주소창의 팝업 차단을 허용한 뒤 다시 시도해주세요)');
     await gdriveGetToken();
     setDriveStatus('백업 목록 불러오는 중...');
     const folderId = await gdriveGetFolderId();
@@ -1421,6 +1582,12 @@ window.addEventListener('keydown', e => {
   const isFontOpen = !$('fontModal').classList.contains('hidden');
   const isDriveSetupOpen = !$('driveSetupModal').classList.contains('hidden');
 
+  // 고정 메모 선택 모달이 열려 있으면 키보드 자동 확인을 막고 반드시 버튼 클릭으로 선택
+  if (!$('memoChoiceModal').classList.contains('hidden')) {
+    if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
+    return;
+  }
+
   // 안내 및 확인 모달: Enter와 Space바 모두 확인 처리
   if (isMsgOpen || isConfirmOpen) {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -1442,10 +1609,19 @@ window.addEventListener('keydown', e => {
     }
   }
 
-  // 기존 단축키
-  if (e.ctrlKey && e.altKey) {
-    if (e.key === 'ArrowLeft') { e.preventDefault(); $('moveL').click(); }
-    else if (e.key === 'ArrowRight') { e.preventDefault(); $('moveR').click(); }
+  // 💡 단축키
+  //  - Ctrl + ◀/▶ : 탭 전환 (활성 탭 이동)
+  //  - Alt  + ◀/▶ : 탭 순서 이동 (탭 자리 바꾸기)
+  if (e.ctrlKey && !e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    e.preventDefault();
+    const i = state.tabs.findIndex(t => t.id === state.activeId);
+    if (e.key === 'ArrowLeft' && i > 0) selectTab(state.tabs[i - 1].id);
+    else if (e.key === 'ArrowRight' && i < state.tabs.length - 1) selectTab(state.tabs[i + 1].id);
+  }
+  else if (e.altKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    e.preventDefault(); // 브라우저 기본 동작(뒤로/앞으로 가기) 차단
+    if (e.key === 'ArrowLeft') $('moveL').click();
+    else $('moveR').click();
   }
 });
 
