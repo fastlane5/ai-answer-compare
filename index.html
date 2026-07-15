@@ -961,25 +961,39 @@ $('txtEach').onclick = () => {
 };
 
 // 저장 (PDF)
-// 💡 PDF 렌더링용 임시 컨테이너 생성 (화면 밖 배치로 flex 레이아웃 간섭 및 깜빡임 방지)
+// 💡 PDF 렌더링용 임시 컨테이너 생성
+//  - 화면 밖 배치는 '래퍼'에만 적용: html2pdf가 본체를 복제할 때 위치 스타일이
+//    함께 복사되면 캡처 영역 밖으로 밀려나 빈 PDF가 생성되므로,
+//    본체(container)에는 위치 관련 인라인 스타일을 절대 넣지 않는다.
 function createPdfContainer(markdownText) {
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'absolute';
+  wrapper.style.left = '-10000px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '800px';
+
   const container = document.createElement('div');
   container.className = 'markdown-body p-10 bg-white text-gray-900';
   container.style.fontFamily = state.settings.fontFamily;
   container.style.fontSize = state.settings.fontSize + 'px';
   container.style.lineHeight = state.settings.lineSpacing;
-  container.style.width = '800px';
-  container.style.position = 'absolute';
-  container.style.left = '-10000px';
-  container.style.top = '0';
 
   try {
     container.innerHTML = marked.parse(markdownText || '내용 없음');
   } catch(e) {
     container.innerHTML = '<p>렌더링 오류</p>';
   }
-  document.body.appendChild(container);
-  return container;
+
+  wrapper.appendChild(container);
+  document.body.appendChild(wrapper);
+  container._pdfWrapper = wrapper; // 정리(제거) 시 래퍼를 찾기 위한 참조
+  return container; // html2pdf에는 위치 스타일이 없는 안쪽 요소를 전달
+}
+
+// PDF 임시 컨테이너 제거 (래퍼째로 삭제)
+function removePdfContainer(container) {
+  const w = container && container._pdfWrapper;
+  if (w && w.parentNode) w.parentNode.removeChild(w);
 }
 
 // PDF 공통 옵션 생성
@@ -1008,7 +1022,7 @@ async function generatePDF(content, filename) {
     console.error(err);
     alert('PDF 생성 중 오류가 발생했습니다.');
   } finally {
-    document.body.removeChild(container);
+    removePdfContainer(container);
     $('pdfModal').classList.add('hidden');
   }
 }
@@ -1061,7 +1075,7 @@ $('pdfAll').onclick = async () => {
     console.error(err);
     msg('오류', '통합 PDF 생성 중 오류가 발생했습니다.\n' + (err && err.message ? err.message : ''));
   } finally {
-    containers.forEach(c => { if (c.parentNode) c.parentNode.removeChild(c); });
+    containers.forEach(removePdfContainer);
     $('pdfModal').classList.add('hidden');
   }
 };
@@ -1084,7 +1098,7 @@ $('pdfEach').onclick = async () => {
       try {
         await html2pdf().set(opt).from(container).save();
       } finally {
-        document.body.removeChild(container);
+        removePdfContainer(container);
       }
     }
   } catch (err) {
