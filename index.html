@@ -1107,15 +1107,24 @@ function splitLongBlocks(root) {
 
   // 노드 목록을 글자 수 기준으로 여러 블록에 나눠 담는 공통 도우미 (인라인 서식 유지)
   function chunkNodes(nodes, makeBlock) {
+    // 문장 분리: 한 글자씩 스캔하며 종결부호에서 끊음 → 어떤 입력이든 글자 유실이 불가능
+    function splitSentencesLossless(text) {
+      const out = [];
+      let cur = '';
+      for (const ch of text) {
+        cur += ch;
+        if ('.!?。…'.indexOf(ch) !== -1) { out.push(cur); cur = ''; }
+      }
+      if (cur) out.push(cur);
+      return out;
+    }
     const blocks = [];
     let cur = makeBlock();
     let curLen = 0;
     const flush = () => { if (cur.childNodes.length) { blocks.push(cur); cur = makeBlock(); curLen = 0; } };
     nodes.forEach(node => {
       if (node.nodeType === Node.TEXT_NODE) {
-        // 텍스트는 문장 단위로 쪼개어 분배
-        const sentences = node.textContent.match(/[^.!?。…\n]+[.!?。…]*[\s]*/g) || [node.textContent];
-        sentences.forEach(s => {
+        splitSentencesLossless(node.textContent).forEach(s => {
           cur.appendChild(document.createTextNode(s));
           curLen += s.length;
           if (curLen >= CHUNK_CHARS) flush();
@@ -1269,8 +1278,19 @@ function splitLongBlocks(root) {
 //    페이지 경계가 글줄 위를 지나가는 일이 원천적으로 없다.
 function paginateIntoPages(container, pageHcss) {
   const wrapper = container._pdfWrapper;
+
+  // 최상위에 맨 텍스트가 남아있으면 문단으로 감싸서 유실 방지
   const nodes = Array.from(container.childNodes)
-    .filter(n => !(n.nodeType === Node.TEXT_NODE && !n.textContent.trim()));
+    .filter(n => !(n.nodeType === Node.TEXT_NODE && !n.textContent.trim()))
+    .map(n => {
+      if (n.nodeType === Node.TEXT_NODE) {
+        const p = document.createElement('p');
+        p.textContent = n.textContent;
+        container.replaceChild(p, n);
+        return p;
+      }
+      return n;
+    });
 
   const pages = [];
   let pageDiv = null;
@@ -1285,34 +1305,60 @@ function paginateIntoPages(container, pageHcss) {
     wrapper.appendChild(pageDiv);
     pages.push(pageDiv);
   };
+  const overflow = () => pageDiv.scrollHeight > pageDiv.clientHeight;
+
+  // 💡 [내용 손실 방지] 분할 후에도 페이지보다 큰 블록은 절대 잘라 버리지 않고,
+  //    높이 제한이 없는 '통짜 블록 페이지'로 표시 → 렌더링 단계에서 여러 페이지로
+  //    나눠 담는다(해당 블록 범위 안에서만 정밀 분할하므로 오차 누적 없음).
+  const markOversize = () => {
+    pageDiv.style.height = 'auto';
+    pageDiv.style.overflow = 'visible';
+    pageDiv._oversize = true;
+    newPage();
+  };
+
   newPage();
 
   nodes.forEach(node => {
     pageDiv.appendChild(node);
-    if (pageDiv.scrollHeight > pageDiv.clientHeight) {
-      if (pageDiv.children.length <= 1) {
-        // 분할 후에도 페이지보다 큰 초대형 블록: 이 페이지에 홀로 두고 다음으로 진행
-        newPage();
-        return;
-      }
-      pageDiv.removeChild(node);
-      // 제목(H1~H6)이 페이지 맨 아래에 홀로 남지 않도록 함께 다음 페이지로
-      let heading = null;
-      const last = pageDiv.lastElementChild;
-      if (last && /^H[1-6]$/.test(last.tagName)) {
-        heading = last;
-        pageDiv.removeChild(last);
-      }
-      newPage();
-      if (heading) pageDiv.appendChild(heading);
-      pageDiv.appendChild(node);
-      if (pageDiv.scrollHeight > pageDiv.clientHeight) newPage(); // 그래도 넘치면 홀로 두고 진행
+    if (!overflow()) return;
+
+    if (pageDiv.children.length <= 1) {
+      // 빈 페이지에 넣었는데도 넘침 = 페이지보다 큰 블록 → 손실 없는 통짜 페이지로
+      markOversize();
+      return;
     }
+
+    pageDiv.removeChild(node);
+    // 제목(H1~H6)이 페이지 맨 아래에 홀로 남지 않도록 함께 다음 페이지로
+    let heading = null;
+    const last = pageDiv.lastElementChild;
+    if (last && /^H[1-6]$/.test(last.tagName)) {
+      heading = last;
+      pageDiv.removeChild(last);
+    }
+    newPage();
+    if (heading) pageDiv.appendChild(heading);
+    pageDiv.appendChild(node);
+    if (!overflow()) return;
+
+    if (heading && pageDiv.children.length > 1) {
+      // 제목+블록이 함께 넘치면 블록만 다음 페이지로 (제목은 이 페이지에 남음)
+      pageDiv.removeChild(node);
+      newPage();
+      pageDiv.appendChild(node);
+      if (!overflow()) return;
+    }
+    // 단독으로도 넘치는 초대형 블록 → 손실 없는 통짜 페이지로
+    markOversize();
   });
 
-  // 마지막 페이지가 비어 있으면 제거
-  while (pages.length > 1 && pages[pages.length - 1].children.length === 0) {
-    wrapper.removeChild(pages.pop());
+  // 빈 페이지 정리
+  for (let i = pages.length - 1; i >= 0; i--) {
+    if (pages[i].children.length === 0) {
+      wrapper.removeChild(pages[i]);
+      pages.splice(i, 1);
+    }
   }
 
   container.style.display = 'none'; // 빈 원본 컨테이너는 렌더링에서 제외
@@ -1336,8 +1382,39 @@ async function appendPagesToPdf(pdf, markdownText, isFirstPage, onProgress) {
 
     for (let i = 0; i < pages.length; i++) {
       if (onProgress) onProgress(i + 1, pages.length);
-      // 각 페이지를 '개별 캔버스'로 렌더링 → 절단 없음, 캔버스 크기 제한 없음
-      const canvas = await html2canvas(pages[i], {
+      const pageDiv = pages[i];
+
+      if (pageDiv._oversize) {
+        // 💡 초대형 블록: 블록 전체를 한 캔버스로 그린 뒤 '이 블록 범위 안에서만' 여러 페이지로 분할
+        //    (분할 오차가 블록 몇 페이지 안에서만 계산되므로 누적 오차가 없고, 내용도 전혀 사라지지 않음)
+        const blockHcss = pageDiv.scrollHeight;
+        const scale = Math.min(2, 30000 / Math.max(1, blockHcss)); // 캔버스 최대 크기(약 3만px) 보호
+        const canvas = await html2canvas(pageDiv, {
+          scale: scale, useCORS: true, backgroundColor: '#ffffff', logging: false
+        });
+        const pxPerCss = canvas.width / cssW;
+        const slicePx = pageHcss * pxPerCss; // 페이지 1장에 해당하는 캔버스 픽셀 높이 (float)
+        let sy = 0;
+        while (sy < canvas.height - 1) {
+          const remain = canvas.height - Math.round(sy);
+          const sh = Math.min(remain, Math.round(slicePx));
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.round(slicePx);
+          const ctx = pageCanvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(canvas, 0, Math.round(sy), canvas.width, sh, 0, 0, canvas.width, sh);
+          if (!isFirstPage) pdf.addPage();
+          isFirstPage = false;
+          pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.93), 'JPEG', PDF_LAYOUT.margin, PDF_LAYOUT.margin, innerW, innerH);
+          sy += slicePx;
+        }
+        continue;
+      }
+
+      // 일반 페이지: '개별 캔버스'로 렌더링 → 절단 없음, 캔버스 크기 제한 없음
+      const canvas = await html2canvas(pageDiv, {
         scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false
       });
       const imgData = canvas.toDataURL('image/jpeg', 0.93);
