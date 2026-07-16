@@ -1305,7 +1305,17 @@ function paginateIntoPages(container, pageHcss) {
     wrapper.appendChild(pageDiv);
     pages.push(pageDiv);
   };
-  const overflow = () => pageDiv.scrollHeight > pageDiv.clientHeight;
+  // 💡 넘침 판정: scrollHeight만으로는 아래쪽 안 여백(padding-bottom)으로 삐져나간
+  //    글줄을 감지하지 못하므로(사각지대), 마지막 블록의 실제 아래 끝 좌표를
+  //    본문 하한선(상자 아래 끝 - 아래 여백)과 직접 비교해 정밀 판정한다.
+  const overflow = () => {
+    if (pageDiv.scrollHeight > pageDiv.clientHeight) return true;
+    const last = pageDiv.lastElementChild;
+    if (!last) return false;
+    const padBottom = parseFloat(getComputedStyle(pageDiv).paddingBottom) || 0;
+    const contentLimit = pageDiv.getBoundingClientRect().bottom - padBottom;
+    return last.getBoundingClientRect().bottom > contentLimit + 0.5;
+  };
 
   // 💡 [내용 손실 방지] 분할 후에도 페이지보다 큰 블록은 절대 잘라 버리지 않고,
   //    높이 제한이 없는 '통짜 블록 페이지'로 표시 → 렌더링 단계에서 여러 페이지로
@@ -1374,9 +1384,12 @@ async function appendPagesToPdf(pdf, markdownText, isFirstPage, onProgress) {
   const container = createPdfContainer(markdownText);
   try {
     const innerW = PDF_LAYOUT.pageW - PDF_LAYOUT.margin * 2;  // 180mm
-    const innerH = PDF_LAYOUT.pageH - PDF_LAYOUT.margin * 2;  // 267mm
+    // 💡 바닥글(파일명·쪽번호) 전용 공간 10mm를 본문 영역에서 미리 제외
+    //    → 본문 마지막 줄이 바닥글과 절대 겹치지 않음
+    const FOOTER_RESERVE = 10; // mm
+    const contentHmm = (PDF_LAYOUT.pageH - PDF_LAYOUT.margin * 2) - FOOTER_RESERVE; // 257mm
     const cssW = container.getBoundingClientRect().width;      // 180mm의 실제 px 폭
-    const pageHcss = cssW * innerH / innerW;                   // 폭 비례로 환산한 페이지 높이(px)
+    const pageHcss = cssW * contentHmm / innerW;               // 폭 비례로 환산한 본문 높이(px)
 
     const pages = paginateIntoPages(container, pageHcss);
 
@@ -1407,7 +1420,7 @@ async function appendPagesToPdf(pdf, markdownText, isFirstPage, onProgress) {
           ctx.drawImage(canvas, 0, Math.round(sy), canvas.width, sh, 0, 0, canvas.width, sh);
           if (!isFirstPage) pdf.addPage();
           isFirstPage = false;
-          pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.93), 'JPEG', PDF_LAYOUT.margin, PDF_LAYOUT.margin, innerW, innerH);
+          pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.93), 'JPEG', PDF_LAYOUT.margin, PDF_LAYOUT.margin, innerW, contentHmm);
           sy += slicePx;
         }
         continue;
@@ -1420,7 +1433,7 @@ async function appendPagesToPdf(pdf, markdownText, isFirstPage, onProgress) {
       const imgData = canvas.toDataURL('image/jpeg', 0.93);
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
-      pdf.addImage(imgData, 'JPEG', PDF_LAYOUT.margin, PDF_LAYOUT.margin, innerW, innerH);
+      pdf.addImage(imgData, 'JPEG', PDF_LAYOUT.margin, PDF_LAYOUT.margin, innerW, contentHmm);
     }
     return isFirstPage;
   } finally {
